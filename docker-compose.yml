@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medilinkpro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: medilinkpro
+      POSTGRES_USER: medilinkpro_user
+      POSTGRES_PASSWORD: medilinkpro_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - medilinkpro-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medilinkpro_user -d medilinkpro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medilinkpro-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: medilinkpro
+      DB_USERNAME: medilinkpro_user
+      DB_PASSWORD: medilinkpro_pass
+      JWT_SECRET: NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4
+      JWT_EXPIRATION_MS: 86400000
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "8080:8080"
+    volumes:
+      - medilinkpro-uploads:/app/uploads
+
+volumes:
+  medilinkpro-pgdata:
+  medilinkpro-uploads:

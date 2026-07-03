@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: medilinkpro-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:medilinkpro}
+    username: ${DB_USERNAME:medilinkpro_user}
+    password: ${DB_PASSWORD:medilinkpro_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+
+medilinkpro:
+  jwt:
+    # Cle secrete encodee en Base64 (HS256). A changer en production via variable d'environnement.
+    secret: ${JWT_SECRET:NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  upload:
+    # Dossier disque de stockage des fichiers uploades (photos d'etablissements, etc.).
+    # En Docker, ce chemin est monte sur un volume persistant (voir docker-compose.yml).
+    dir: ${UPLOAD_DIR:uploads}
+    url-prefix: /uploads
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.medilinkpro.backend: DEBUG
+    org.springframework.security: INFO
