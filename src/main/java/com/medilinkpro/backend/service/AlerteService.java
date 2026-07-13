@@ -1,6 +1,7 @@
 package com.medilinkpro.backend.service;
 
 import com.medilinkpro.backend.dto.request.AlerteRequest;
+import com.medilinkpro.backend.dto.request.CompteRenduRequest;
 import com.medilinkpro.backend.dto.request.NoterAlerteRequest;
 import com.medilinkpro.backend.dto.response.AlerteResponse;
 import com.medilinkpro.backend.dto.response.NoteMoyenneResponse;
@@ -68,6 +69,14 @@ public class AlerteService {
         Infirmier infirmier = (Infirmier) utilisateurRepository.findById(infirmierId)
                 .orElseThrow(() -> new ResourceNotFoundException("Infirmier non trouve"));
 
+        // Une infirmiere ne peut gerer qu'une seule intervention a la fois : elle doit
+        // d'abord soumettre son compte-rendu avant de pouvoir repondre a une nouvelle alerte.
+        boolean dejaOccupee = alerteRepository.existsByInfirmierIdAndStatut(infirmierId, StatutAlerte.REPONDUE);
+        if (dejaOccupee) {
+            throw new ConflictException(
+                    "Vous avez deja une intervention en cours. Soumettez votre compte-rendu avant de repondre a une nouvelle alerte.");
+        }
+
         int lignesAffectees = alerteRepository.repondreSiDisponible(alerteId, infirmier, LocalDateTime.now());
         if (lignesAffectees == 0) {
             throw new ConflictException("Cette alerte a deja ete prise en charge par une autre infirmiere (ou annulee)");
@@ -126,6 +135,32 @@ public class AlerteService {
         // informe que la recherche d'une nouvelle infirmiere reprend.
         messagingTemplate.convertAndSend(TOPIC_ALERTES, response);
         messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
+
+        return response;
+    }
+
+    /**
+     * L'infirmiere soumet son compte-rendu de fin d'intervention : l'alerte passe a
+     * SERVICE_RENDU (le patient peut desormais la noter) et l'infirmiere est liberee,
+     * elle peut de nouveau repondre a une nouvelle alerte EN_ATTENTE.
+     */
+    @Transactional
+    public AlerteResponse soumettreCompteRendu(UUID alerteId, UUID infirmierId, CompteRenduRequest request) {
+        int lignesAffectees = alerteRepository.soumettreCompteRenduSiResponsable(
+                alerteId, infirmierId, request.getCompteRendu(), LocalDateTime.now());
+        if (lignesAffectees == 0) {
+            throw new ConflictException("Impossible de soumettre ce compte-rendu (intervention deja cloturee ou non responsable)");
+        }
+
+        AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+        AlerteResponse response = toResponse(alerte);
+
+        // Le patient est informe que le compte-rendu est disponible et qu'il peut noter
+        // l'intervention. Diffuse aussi aux infirmieres au cas ou l'ecran d'une autre
+        // reflete l'etat de cette alerte.
+        messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
+        messagingTemplate.convertAndSend(TOPIC_ALERTES, response);
 
         return response;
     }
@@ -190,6 +225,8 @@ public class AlerteService {
                 .statut(a.getStatut())
                 .dateCreation(a.getDateCreation())
                 .dateReponse(a.getDateReponse())
+                .compteRendu(a.getCompteRendu())
+                .dateCompteRendu(a.getDateCompteRendu())
                 .note(a.getNote())
                 .commentaire(a.getCommentaire())
                 .dateNotation(a.getDateNotation());

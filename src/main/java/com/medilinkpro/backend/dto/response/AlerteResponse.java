@@ -38,6 +38,9 @@ public class AlerteResponse {
     private LocalDateTime dateCreation;
     private LocalDateTime dateReponse;
 
+    private String compteRendu;
+    private LocalDateTime dateCompteRendu;
+
     private Integer note;
     private String commentaire;
     private LocalDateTime dateNotation;

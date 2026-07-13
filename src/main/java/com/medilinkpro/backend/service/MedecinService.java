@@ -37,29 +37,18 @@ public class MedecinService {
     }
 
     /**
-     * Recherche de specialistes geolocalises (Module 2 - F12).
-     * Si lat/lng ne sont pas fournis, la recherche se fait uniquement par specialite.
+     * Recherche de specialistes (Module 2 - F12), filtrable par specialite, ville et/ou quartier.
      */
     @Transactional(readOnly = true)
-    public List<MedecinResponse> rechercher(String specialite, Double lat, Double lng) {
-        List<Medecin> medecins;
-        if (lat != null && lng != null) {
-            medecins = medecinRepository.rechercherParSpecialiteEtLocalisation(specialite, lat, lng);
-        } else if (specialite != null && !specialite.isBlank()) {
-            medecins = medecinRepository.findBySpecialiteIgnoreCaseContaining(specialite);
-        } else {
-            medecins = medecinRepository.findAll();
-        }
+    public List<MedecinResponse> rechercher(String specialite, String ville, String quartier) {
+        List<Medecin> medecins = medecinRepository.rechercher(
+                blankToNull(specialite), blankToNull(ville), blankToNull(quartier));
 
-        return medecins.stream()
-                .map(m -> {
-                    MedecinResponse response = medecinMapper.toResponse(m);
-                    if (lat != null && lng != null && m.getLatitude() != null && m.getLongitude() != null) {
-                        response.setDistanceApprox(distanceApproximativeKm(lat, lng, m.getLatitude(), m.getLongitude()));
-                    }
-                    return response;
-                })
-                .collect(Collectors.toList());
+        return medecins.stream().map(medecinMapper::toResponse).collect(Collectors.toList());
+    }
+
+    private String blankToNull(String valeur) {
+        return (valeur == null || valeur.isBlank()) ? null : valeur;
     }
 
     @Transactional
@@ -71,8 +60,8 @@ public class MedecinService {
         if (request.getTelephone() != null) medecin.setTelephone(request.getTelephone());
         if (request.getSpecialite() != null) medecin.setSpecialite(request.getSpecialite());
         if (request.getNumeroOrdre() != null) medecin.setNumeroOrdre(request.getNumeroOrdre());
-        if (request.getLatitude() != null) medecin.setLatitude(request.getLatitude());
-        if (request.getLongitude() != null) medecin.setLongitude(request.getLongitude());
+        if (request.getVille() != null) medecin.setVille(request.getVille());
+        if (request.getQuartier() != null) medecin.setQuartier(request.getQuartier());
         if (request.getTarif() != null) medecin.setTarif(request.getTarif());
         if (request.getVerifie() != null) medecin.setVerifie(request.getVerifie());
         if (request.getEtablissementId() != null) {
@@ -94,21 +83,5 @@ public class MedecinService {
     private Medecin getMedecinOrThrow(UUID id) {
         return medecinRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Medecin non trouve avec l'id : " + id));
-    }
-
-    /**
-     * Distance approximative en kilometres (formule de Haversine simplifiee).
-     * Suffisante pour un affichage indicatif ; pour une precision cartographique,
-     * utiliser une extension geospatiale comme PostGIS.
-     */
-    private double distanceApproximativeKm(double lat1, double lon1, double lat2, double lon2) {
-        final int rayonTerreKm = 6371;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round(rayonTerreKm * c * 100.0) / 100.0;
     }
 }

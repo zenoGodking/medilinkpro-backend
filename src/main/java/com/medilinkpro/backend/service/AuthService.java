@@ -129,6 +129,8 @@ public class AuthService {
                     .allergies(request.getAllergies())
                     .antecedents(request.getAntecedents())
                     .numSecuriteSociale(request.getNumSecuriteSociale())
+                    .contactUrgenceNom(request.getContactUrgenceNom())
+                    .contactUrgenceTelephone(request.getContactUrgenceTelephone())
                     .build();
 
             case MEDECIN -> Medecin.builder()
@@ -142,8 +144,8 @@ public class AuthService {
                     .statutCompte(statutCompte)
                     .specialite(request.getSpecialite())
                     .numeroOrdre(request.getNumeroOrdre())
-                    .latitude(request.getLatitude())
-                    .longitude(request.getLongitude())
+                    .ville(request.getVille())
+                    .quartier(request.getQuartier())
                     .tarif(request.getTarif())
                     .verifie(false)
                     .build();

@@ -16,18 +16,17 @@ public interface MedecinRepository extends JpaRepository<Medecin, UUID> {
     List<Medecin> findBySpecialiteIgnoreCaseContaining(String specialite);
 
     /**
-     * Recherche de medecins par specialite, tries par distance approximative
-     * (formule euclidienne simplifiee, suffisante pour un rayon local).
-     * Pour une vraie recherche geospatiale en production, utiliser PostGIS (ST_Distance).
+     * Recherche de medecins par specialite, ville et/ou quartier (filtres optionnels,
+     * combinables). Les medecins de la meme ville/quartier remontent en priorite.
      */
     @Query("""
             SELECT m FROM Medecin m
             WHERE (:specialite IS NULL OR LOWER(m.specialite) LIKE LOWER(CONCAT('%', :specialite, '%')))
-            AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL
-            ORDER BY (POWER(m.latitude - :lat, 2) + POWER(m.longitude - :lng, 2)) ASC
+              AND (:ville IS NULL OR LOWER(m.ville) LIKE LOWER(CONCAT('%', :ville, '%')))
+              AND (:quartier IS NULL OR LOWER(m.quartier) LIKE LOWER(CONCAT('%', :quartier, '%')))
+            ORDER BY m.nom ASC
             """)
-    List<Medecin> rechercherParSpecialiteEtLocalisation(
-            @Param("specialite") String specialite,
-            @Param("lat") Double lat,
-            @Param("lng") Double lng);
+    List<Medecin> rechercher(@Param("specialite") String specialite,
+                              @Param("ville") String ville,
+                              @Param("quartier") String quartier);
 }

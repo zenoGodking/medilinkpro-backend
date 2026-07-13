@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Medecin / Specialiste : professionnel de sante proposant consultations et teleconsultations.
- * Geolocalise (lat/lng) pour la recherche de specialistes a proximite.
+ * Localise par ville et quartier pour la recherche de specialistes.
  */
 @Entity
 @Table(name = "medecins")
@@ -36,11 +36,11 @@ public class Medecin extends Utilisateur {
     @Column(name = "numero_ordre", length = 50)
     private String numeroOrdre;
 
-    @Column(name = "latitude")
-    private Double latitude;
+    @Column(name = "ville", length = 100)
+    private String ville;
 
-    @Column(name = "longitude")
-    private Double longitude;
+    @Column(name = "quartier", length = 100)
+    private String quartier;
 
     @Column(name = "tarif", precision = 10, scale = 2)
     private BigDecimal tarif;

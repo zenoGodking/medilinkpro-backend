@@ -46,6 +46,13 @@ public class Patient extends Utilisateur {
     @Column(name = "num_securite_sociale", length = 50)
     private String numSecuriteSociale;
 
+    /** Contact d'un proche a joindre en cas d'urgence, renseigne a l'inscription. */
+    @Column(name = "contact_urgence_nom", length = 150)
+    private String contactUrgenceNom;
+
+    @Column(name = "contact_urgence_telephone", length = 30)
+    private String contactUrgenceTelephone;
+
     @JsonIgnore
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @ToString.Exclude

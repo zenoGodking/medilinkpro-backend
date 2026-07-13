@@ -51,11 +51,13 @@ public class RegisterRequest {
     private String allergies;
     private String antecedents;
     private String numSecuriteSociale;
+    private String contactUrgenceNom;
+    private String contactUrgenceTelephone;
 
     // Champs specifiques MEDECIN
     private String specialite;
     private String numeroOrdre;
-    private Double latitude;
-    private Double longitude;
+    private String ville;
+    private String quartier;
     private java.math.BigDecimal tarif;
 }

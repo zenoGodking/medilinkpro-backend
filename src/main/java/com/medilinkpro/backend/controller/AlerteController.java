@@ -1,6 +1,7 @@
 package com.medilinkpro.backend.controller;
 
 import com.medilinkpro.backend.dto.request.AlerteRequest;
+import com.medilinkpro.backend.dto.request.CompteRenduRequest;
 import com.medilinkpro.backend.dto.request.NoterAlerteRequest;
 import com.medilinkpro.backend.dto.response.AlerteResponse;
 import com.medilinkpro.backend.dto.response.NoteMoyenneResponse;
@@ -67,6 +68,13 @@ public class AlerteController {
     public ResponseEntity<AlerteResponse> retracter(
             @PathVariable UUID id, @RequestParam UUID infirmierId) {
         return ResponseEntity.ok(alerteService.retracter(id, infirmierId));
+    }
+
+    @PatchMapping("/{id}/compte-rendu")
+    @Operation(summary = "L'infirmiere soumet son compte-rendu de fin d'intervention : elle est alors liberee pour une nouvelle alerte")
+    public ResponseEntity<AlerteResponse> soumettreCompteRendu(
+            @PathVariable UUID id, @RequestParam UUID infirmierId, @Valid @RequestBody CompteRenduRequest request) {
+        return ResponseEntity.ok(alerteService.soumettreCompteRendu(id, infirmierId, request));
     }
 
     @PatchMapping("/{id}/noter")

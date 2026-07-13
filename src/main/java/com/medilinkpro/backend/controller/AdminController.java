@@ -29,6 +29,20 @@ public class AdminController {
         return ResponseEntity.ok(adminService.listerComptesEnAttente(role));
     }
 
+    @GetMapping("/utilisateurs")
+    @Operation(summary = "Lister tous les utilisateurs de la plateforme, filtrable par role")
+    public ResponseEntity<List<CompteEnAttenteResponse>> listerTous(
+            @RequestParam(required = false) Role role) {
+        return ResponseEntity.ok(adminService.listerTous(role));
+    }
+
+    @DeleteMapping("/utilisateurs/{id}")
+    @Operation(summary = "Supprimer definitivement un compte utilisateur, quel que soit son role")
+    public ResponseEntity<Void> supprimer(@PathVariable UUID id, @RequestParam UUID adminId) {
+        adminService.supprimer(id, adminId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/comptes/{id}/valider")
     @Operation(summary = "Approuver ou refuser un compte professionnel en attente")
     public ResponseEntity<CompteEnAttenteResponse> valider(

@@ -64,6 +64,14 @@ public class AlerteSoinDomicile {
     @Column(name = "date_reponse")
     private LocalDateTime dateReponse;
 
+    /** Compte-rendu redige par l'infirmiere a la fin de son intervention (obligatoire
+     * pour liberer l'infirmiere et lui permettre de repondre a une nouvelle alerte). */
+    @Column(name = "compte_rendu", columnDefinition = "TEXT")
+    private String compteRendu;
+
+    @Column(name = "date_compte_rendu")
+    private LocalDateTime dateCompteRendu;
+
     /** Note laissee par le patient a la fin du service rendu (1 a 5), et commentaire libre. */
     @Column(name = "note")
     private Integer note;

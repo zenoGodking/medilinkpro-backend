@@ -20,9 +20,10 @@ public class EtablissementResponse {
     private String nom;
     private String type;
     private String adresse;
-    private Double latitude;
-    private Double longitude;
+    private String ville;
+    private String quartier;
     private String telephone;
     private List<String> specialitesDisponibles;
     private List<String> photos;
+    private long nombreVisites;
 }

@@ -37,14 +37,27 @@ public class EtablissementService {
         return etablissementMapper.toResponse(getOrThrow(id));
     }
 
+    /**
+     * Enregistre une visite publique de la fiche d'un etablissement (page vitrine,
+     * accessible sans inscription) et retourne l'etablissement avec le compteur a jour.
+     */
+    @Transactional
+    public EtablissementResponse enregistrerVisite(UUID id) {
+        int lignesAffectees = etablissementRepository.incrementerVisites(id);
+        if (lignesAffectees == 0) {
+            throw new ResourceNotFoundException("Etablissement non trouve avec l'id : " + id);
+        }
+        return findById(id);
+    }
+
     @Transactional
     public EtablissementResponse create(EtablissementRequest request) {
         EtablissementSante etablissement = EtablissementSante.builder()
                 .nom(request.getNom())
                 .type(request.getType())
                 .adresse(request.getAdresse())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
+                .ville(request.getVille())
+                .quartier(request.getQuartier())
                 .telephone(request.getTelephone())
                 .specialitesDisponibles(request.getSpecialitesDisponibles() != null
                         ? new ArrayList<>(request.getSpecialitesDisponibles())
@@ -61,8 +74,8 @@ public class EtablissementService {
         if (request.getNom() != null) etablissement.setNom(request.getNom());
         if (request.getType() != null) etablissement.setType(request.getType());
         if (request.getAdresse() != null) etablissement.setAdresse(request.getAdresse());
-        if (request.getLatitude() != null) etablissement.setLatitude(request.getLatitude());
-        if (request.getLongitude() != null) etablissement.setLongitude(request.getLongitude());
+        if (request.getVille() != null) etablissement.setVille(request.getVille());
+        if (request.getQuartier() != null) etablissement.setQuartier(request.getQuartier());
         if (request.getTelephone() != null) etablissement.setTelephone(request.getTelephone());
         if (request.getSpecialitesDisponibles() != null) {
             etablissement.setSpecialitesDisponibles(new ArrayList<>(request.getSpecialitesDisponibles()));

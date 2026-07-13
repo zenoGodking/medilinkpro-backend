@@ -27,4 +27,6 @@ public class PatientResponse {
     private String allergies;
     private String antecedents;
     private String numSecuriteSociale;
+    private String contactUrgenceNom;
+    private String contactUrgenceTelephone;
 }

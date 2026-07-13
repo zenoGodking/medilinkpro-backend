@@ -7,9 +7,11 @@ import com.medilinkpro.backend.entity.Utilisateur;
 import com.medilinkpro.backend.enums.Role;
 import com.medilinkpro.backend.enums.StatutCompte;
 import com.medilinkpro.backend.exception.BadRequestException;
+import com.medilinkpro.backend.exception.ConflictException;
 import com.medilinkpro.backend.exception.ResourceNotFoundException;
 import com.medilinkpro.backend.repository.UtilisateurRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,8 +19,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Validation par un Admin des comptes professionnels (Medecin, Secretaire, Directeur)
- * crees via l'inscription publique (F-Auth) : approbation, refus, reouverture, suspension.
+ * Administration des comptes utilisateurs : validation des inscriptions
+ * professionnelles (Medecin, Secretaire, Directeur, Infirmier), et gestion
+ * complete (liste, suspension, suppression) de tous les comptes.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,6 +34,16 @@ public class AdminService {
         List<Utilisateur> utilisateurs = role != null
                 ? utilisateurRepository.findByStatutCompteAndRole(StatutCompte.EN_ATTENTE, role)
                 : utilisateurRepository.findByStatutCompte(StatutCompte.EN_ATTENTE);
+
+        return utilisateurs.stream().map(this::toResponse).toList();
+    }
+
+    /** Liste tous les utilisateurs de la plateforme, tous statuts confondus (vue d'administration globale). */
+    @Transactional(readOnly = true)
+    public List<CompteEnAttenteResponse> listerTous(Role role) {
+        List<Utilisateur> utilisateurs = role != null
+                ? utilisateurRepository.findByRole(role)
+                : utilisateurRepository.findAll();
 
         return utilisateurs.stream().map(this::toResponse).toList();
     }
@@ -66,6 +79,32 @@ public class AdminService {
         Utilisateur utilisateur = getOrThrow(id);
         utilisateur.setActif(!utilisateur.isActif());
         return toResponse(utilisateurRepository.save(utilisateur));
+    }
+
+    /**
+     * Supprime definitivement un compte utilisateur, quel que soit son role.
+     * Un administrateur ne peut pas se supprimer lui-meme (protection contre un
+     * verrouillage accidentel de la plateforme). Si l'utilisateur possede des
+     * donnees medicales liees (consultations, ordonnances, rendez-vous...), la
+     * suppression est refusee : on privilegie la desactivation (toggleActif)
+     * pour ne jamais perdre un historique medical.
+     */
+    @Transactional
+    public void supprimer(UUID id, UUID adminCourantId) {
+        if (id.equals(adminCourantId)) {
+            throw new BadRequestException("Vous ne pouvez pas supprimer votre propre compte administrateur");
+        }
+
+        Utilisateur utilisateur = getOrThrow(id);
+
+        try {
+            utilisateurRepository.delete(utilisateur);
+            utilisateurRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException(
+                    "Impossible de supprimer ce compte : il possede des donnees liees (consultations, "
+                            + "rendez-vous, ordonnances, alertes...). Desactivez-le plutot pour preserver l'historique medical.");
+        }
     }
 
     private Utilisateur getOrThrow(UUID id) {

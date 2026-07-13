@@ -41,6 +41,7 @@ public class SecurityConfig {
             "/api/auth/**",
             "/api/urgence/**",
             "/api/etablissements/public/**",
+            "/api/campagnes/actives",
             "/uploads/**",
             "/ws-alertes/**",
             "/v3/api-docs/**",
@@ -97,7 +98,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/alertes/actives").hasAnyRole("INFIRMIER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/alertes/*/repondre").hasAnyRole("INFIRMIER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/alertes/*/retracter").hasAnyRole("INFIRMIER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/alertes/*/compte-rendu").hasAnyRole("INFIRMIER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/alertes/infirmiers/**").hasAnyRole("INFIRMIER", "ADMIN")
+
+                        // Campagnes des etablissements : creation/lecture interne deja couvertes par les
+                        // regles /api/etablissements/** ci-dessus ; desactivation/suppression reservees
+                        // au Directeur et a l'Admin (la lecture publique passe par PUBLIC_ENDPOINTS)
+                        .requestMatchers(HttpMethod.PATCH, "/api/campagnes/*/desactiver").hasAnyRole("DIRECTEUR", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/campagnes/*").hasAnyRole("DIRECTEUR", "ADMIN")
+
+                        // Integration Medecin-Etablissement : la reponse est ouverte a Medecin/Directeur/Admin,
+                        // le service verifie ensuite que l'acteur est bien celui attendu selon l'initiateur
+                        .requestMatchers(HttpMethod.PATCH, "/api/demandes-integration/*/repondre").hasAnyRole("MEDECIN", "DIRECTEUR", "ADMIN")
 
                         .anyRequest().authenticated()
                 )

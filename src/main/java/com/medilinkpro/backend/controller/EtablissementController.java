@@ -36,6 +36,17 @@ public class EtablissementController {
         return ResponseEntity.ok(etablissementService.findAll());
     }
 
+    @GetMapping("/public/{id}")
+    @Operation(summary = "Fiche publique d'un etablissement (sans authentification)")
+    public ResponseEntity<EtablissementResponse> findByIdPublic(@PathVariable UUID id) {
+        return ResponseEntity.ok(etablissementService.findById(id));
+    }
+
+    @PostMapping("/public/{id}/visite")
+    @Operation(summary = "Enregistrer une visite publique de la fiche (compteur visible par tous)")
+    public ResponseEntity<EtablissementResponse> enregistrerVisite(@PathVariable UUID id) {
+        return ResponseEntity.ok(etablissementService.enregistrerVisite(id));
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Recuperer un etablissement par son id")

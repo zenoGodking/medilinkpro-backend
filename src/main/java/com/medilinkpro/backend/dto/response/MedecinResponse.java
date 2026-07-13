@@ -23,11 +23,10 @@ public class MedecinResponse {
     private String telephone;
     private String specialite;
     private String numeroOrdre;
-    private Double latitude;
-    private Double longitude;
+    private String ville;
+    private String quartier;
     private BigDecimal tarif;
     private boolean verifie;
     private UUID etablissementId;
     private String etablissementNom;
-    private Double distanceApprox;
 }

@@ -21,8 +21,8 @@ public class EtablissementRequest {
 
     private String type;
     private String adresse;
-    private Double latitude;
-    private Double longitude;
+    private String ville;
+    private String quartier;
     private String telephone;
     private List<String> specialitesDisponibles;
 }

@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/medecins")
 @RequiredArgsConstructor
-@Tag(name = "Medecins", description = "Gestion des medecins/specialistes et recherche geolocalisee")
+@Tag(name = "Medecins", description = "Gestion des medecins/specialistes et recherche par ville/quartier")
 public class MedecinController {
 
     private final MedecinService medecinService;
@@ -36,14 +36,14 @@ public class MedecinController {
 
     @GetMapping("/recherche")
     @Operation(
-            summary = "Rechercher des specialistes geolocalises (F12)",
-            description = "Filtre par specialite et/ou trie par proximite si latitude/longitude sont fournies"
+            summary = "Rechercher des specialistes (F12)",
+            description = "Filtre combinable par specialite, ville et/ou quartier"
     )
     public ResponseEntity<List<MedecinResponse>> rechercher(
             @Parameter(description = "Specialite recherchee, ex: cardiologie") @RequestParam(required = false) String specialite,
-            @Parameter(description = "Latitude de l'utilisateur") @RequestParam(required = false) Double lat,
-            @Parameter(description = "Longitude de l'utilisateur") @RequestParam(required = false) Double lng) {
-        return ResponseEntity.ok(medecinService.rechercher(specialite, lat, lng));
+            @Parameter(description = "Ville, ex: Yaounde") @RequestParam(required = false) String ville,
+            @Parameter(description = "Quartier, ex: Bastos") @RequestParam(required = false) String quartier) {
+        return ResponseEntity.ok(medecinService.rechercher(specialite, ville, quartier));
     }
 
     @PutMapping("/{id}")

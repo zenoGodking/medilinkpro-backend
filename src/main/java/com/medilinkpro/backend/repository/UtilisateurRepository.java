@@ -18,4 +18,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, UUID> 
     List<Utilisateur> findByStatutCompte(StatutCompte statutCompte);
 
     List<Utilisateur> findByStatutCompteAndRole(StatutCompte statutCompte, Role role);
+
+    List<Utilisateur> findByRole(Role role);
 }

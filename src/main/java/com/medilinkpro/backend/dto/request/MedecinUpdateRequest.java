@@ -21,8 +21,8 @@ public class MedecinUpdateRequest {
     private String telephone;
     private String specialite;
     private String numeroOrdre;
-    private Double latitude;
-    private Double longitude;
+    private String ville;
+    private String quartier;
     private BigDecimal tarif;
     private Boolean verifie;
     private UUID etablissementId;

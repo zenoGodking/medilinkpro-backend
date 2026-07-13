@@ -45,6 +45,8 @@ public class PatientService {
         if (request.getAllergies() != null) patient.setAllergies(request.getAllergies());
         if (request.getAntecedents() != null) patient.setAntecedents(request.getAntecedents());
         if (request.getNumSecuriteSociale() != null) patient.setNumSecuriteSociale(request.getNumSecuriteSociale());
+        if (request.getContactUrgenceNom() != null) patient.setContactUrgenceNom(request.getContactUrgenceNom());
+        if (request.getContactUrgenceTelephone() != null) patient.setContactUrgenceTelephone(request.getContactUrgenceTelephone());
 
         return patientMapper.toResponse(patientRepository.save(patient));
     }

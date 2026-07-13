@@ -38,6 +38,9 @@ public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDo
 
     List<AlerteSoinDomicile> findByInfirmierIdAndStatutOrderByDateReponseDesc(UUID infirmierId, StatutAlerte statut);
 
+    /** Une infirmiere ne peut avoir qu'une seule intervention REPONDUE (active) a la fois. */
+    boolean existsByInfirmierIdAndStatut(UUID infirmierId, StatutAlerte statut);
+
     /**
      * Retire l'infirmiere responsable et remet l'alerte EN_ATTENTE, uniquement si
      * elle est bien la responsable actuelle et que l'intervention n'est pas deja
@@ -56,8 +59,28 @@ public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDo
     int retracterSiResponsable(@Param("alerteId") UUID alerteId, @Param("infirmierId") UUID infirmierId);
 
     /**
+     * L'infirmiere soumet son compte-rendu de fin d'intervention : l'alerte passe a
+     * SERVICE_RENDU (le patient peut desormais noter) et l'infirmiere est liberee
+     * (elle peut de nouveau repondre a une alerte EN_ATTENTE).
+     * Retourne le nombre de lignes affectees : 0 si le compte-rendu n'est plus possible.
+     */
+    @Modifying
+    @Query("""
+            UPDATE AlerteSoinDomicile a
+            SET a.statut = com.medilinkpro.backend.enums.StatutAlerte.SERVICE_RENDU,
+                a.compteRendu = :compteRendu,
+                a.dateCompteRendu = :dateCompteRendu
+            WHERE a.id = :alerteId AND a.infirmier.id = :infirmierId
+              AND a.statut = com.medilinkpro.backend.enums.StatutAlerte.REPONDUE
+            """)
+    int soumettreCompteRenduSiResponsable(@Param("alerteId") UUID alerteId,
+                                           @Param("infirmierId") UUID infirmierId,
+                                           @Param("compteRendu") String compteRendu,
+                                           @Param("dateCompteRendu") LocalDateTime dateCompteRendu);
+
+    /**
      * Enregistre la note du patient et cloture l'alerte, uniquement si elle appartient
-     * bien a ce patient et qu'une infirmiere est effectivement intervenue (REPONDUE).
+     * bien a ce patient et que l'infirmiere a deja soumis son compte-rendu (SERVICE_RENDU).
      * Retourne le nombre de lignes affectees : 0 si la notation n'est plus possible.
      */
     @Modifying
@@ -68,7 +91,7 @@ public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDo
                 a.commentaire = :commentaire,
                 a.dateNotation = :dateNotation
             WHERE a.id = :alerteId AND a.patient.id = :patientId
-              AND a.statut = com.medilinkpro.backend.enums.StatutAlerte.REPONDUE
+              AND a.statut = com.medilinkpro.backend.enums.StatutAlerte.SERVICE_RENDU
             """)
     int noterSiEligible(@Param("alerteId") UUID alerteId,
                          @Param("patientId") UUID patientId,

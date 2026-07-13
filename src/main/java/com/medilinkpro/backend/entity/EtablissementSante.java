@@ -14,12 +14,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Etablissement de sante (hopital, clinique, cabinet) geolocalise.
- * Sert de support a la recherche et l'affichage sur carte interactive (Module Geolocalisation).
+ * Etablissement de sante (hopital, clinique, cabinet), localise par ville et quartier.
  */
 @Entity
 @Table(name = "etablissements", indexes = {
-        @Index(name = "idx_etablissement_lat_lng", columnList = "latitude, longitude")
+        @Index(name = "idx_etablissement_ville", columnList = "ville")
 })
 @Getter
 @Setter
@@ -44,11 +43,11 @@ public class EtablissementSante {
     @Column(name = "adresse", length = 255)
     private String adresse;
 
-    @Column(name = "latitude")
-    private Double latitude;
+    @Column(name = "ville", length = 100)
+    private String ville;
 
-    @Column(name = "longitude")
-    private Double longitude;
+    @Column(name = "quartier", length = 100)
+    private String quartier;
 
     @Column(name = "telephone", length = 30)
     private String telephone;
@@ -69,6 +68,11 @@ public class EtablissementSante {
     @OrderColumn(name = "position")
     @Builder.Default
     private List<String> photos = new ArrayList<>();
+
+    /** Nombre de fois que la fiche publique de cet etablissement a ete consultee (vitrine, sans inscription). */
+    @Builder.Default
+    @Column(name = "nombre_visites", nullable = false)
+    private long nombreVisites = 0L;
 
     @OneToMany(mappedBy = "etablissement", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @Builder.Default
