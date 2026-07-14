@@ -10,7 +10,10 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
 COPY --from=build /app/target/medilinkpro-backend.jar app.jar
+# Cree le dossier des fichiers uploades (photos d'etablissements...) et donne la
+# propriete de /app a l'utilisateur non-root, sinon l'upload echoue (permission refusee).
+RUN mkdir -p /app/uploads && chown -R spring:spring /app
+USER spring:spring
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
