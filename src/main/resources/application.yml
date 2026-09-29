@@ -39,6 +39,13 @@ medilinkpro:
     prenom: ${SUPER_ADMIN_PRENOM:Super}
     email: ${SUPER_ADMIN_EMAIL:womeloic@gmail.com}
     mot-de-passe: ${SUPER_ADMIN_PASSWORD:Hope123}
+  # Fuseau horaire des rappels de medicaments (heures saisies par les patients).
+  fuseau-horaire: ${FUSEAU_HORAIRE:Africa/Douala}
+  # Notifications push : cles VAPID (generees et stockees en base si absentes) et contact de l'emetteur.
+  push:
+    vapid-public: ${VAPID_PUBLIC_KEY:}
+    vapid-private: ${VAPID_PRIVATE_KEY:}
+    sujet: ${VAPID_SUJET:mailto:contact@medilinkpro.cm}
   jwt:
     # Cle secrete encodee en Base64 (HS256). A changer en production via variable d'environnement.
     secret: ${JWT_SECRET:NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4}

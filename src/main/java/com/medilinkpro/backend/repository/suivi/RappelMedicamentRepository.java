@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface RappelMedicamentRepository extends JpaRepository<RappelMedicament, UUID> {
 
     List<RappelMedicament> findByPatientIdOrderByMedicamentAsc(UUID patientId);
+
+    List<RappelMedicament> findByActifTrue();
 }

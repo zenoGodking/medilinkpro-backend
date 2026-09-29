@@ -55,4 +55,8 @@ public class RappelMedicament {
     @Builder.Default
     @Column(name = "actif", nullable = false)
     private boolean actif = true;
+
+    /** Derniere prise notifiee ("2026-09-29T08:00") : evite d'envoyer deux fois le meme rappel. */
+    @Column(name = "dernier_envoi", length = 20)
+    private String dernierEnvoi;
 }

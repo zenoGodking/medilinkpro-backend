@@ -65,6 +65,7 @@ public class AlerteService {
     private final AlerteSoinDomicileRepository alerteRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final InfirmierRepository infirmierRepository;
+    private final com.medilinkpro.backend.service.push.NotificationPushService notificationPushService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
@@ -122,6 +123,10 @@ public class AlerteService {
             AlerteResponse pourElle = toResponse(alerte);
             pourElle.setDistanceKm(arrondi(p.distanceKm()));
             messagingTemplate.convertAndSendToUser(p.infirmier().getEmail(), QUEUE_ALERTES, pourElle);
+            // Push : l'infirmiere est prevenue meme application fermee ou ecran eteint.
+            notificationPushService.envoyer(p.infirmier().getId(), "Demande de soins a domicile",
+                    "A " + String.format(java.util.Locale.FRANCE, "%.1f", p.distanceKm()) + " km : " + alerte.getAdresse(),
+                    "/infirmier", "alerte-" + alerte.getId());
         }));
         apresCommit(() -> messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, base));
     }
@@ -133,6 +138,8 @@ public class AlerteService {
         apresCommit(() -> {
             messagingTemplate.convertAndSend(TOPIC_ALERTES, response);
             messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
+            notificationPushService.envoyerAuRole(com.medilinkpro.backend.enums.Role.INFIRMIER, "Demande de soins a domicile",
+                    "Aucune infirmiere proche disponible : " + alerte.getAdresse(), "/infirmier", "alerte-" + alerte.getId());
         });
     }
 
@@ -261,6 +268,9 @@ public class AlerteService {
         // patient qu'une infirmiere a repondu ("alerte repondue").
         notifierInfirmieres(alerte, response);
         messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
+        notificationPushService.envoyer(alerte.getPatient().getId(), "Une infirmiere arrive",
+                infirmier.getPrenom() + " " + infirmier.getNom() + " a accepte votre demande. Suivez son trajet en direct.",
+                "/patient/alertes", "alerte-" + alerte.getId());
 
         return response;
     }
@@ -332,6 +342,9 @@ public class AlerteService {
         // reflete l'etat de cette alerte.
         messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
         notifierInfirmieres(alerte, response);
+        notificationPushService.envoyer(alerte.getPatient().getId(), "Soin termine",
+                "Le compte-rendu de votre infirmiere est disponible. Vous pouvez noter l'intervention.",
+                "/patient/alertes", "alerte-" + alerte.getId());
 
         return response;
     }
