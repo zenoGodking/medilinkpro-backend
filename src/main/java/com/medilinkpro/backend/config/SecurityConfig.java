@@ -79,6 +79,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/carte-urgence/moi/**", "/api/carte-urgence/moi").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET, "/api/carte-urgence/*").authenticated()
 
+                        // Espace directeur : ses etablissements et leurs patients (identite seulement)
+                        .requestMatchers("/api/directeur/**").hasRole("DIRECTEUR")
+
                         // Administration
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

@@ -14,4 +14,6 @@ public interface EtablissementRepository extends JpaRepository<EtablissementSant
     @Modifying
     @Query("UPDATE EtablissementSante e SET e.nombreVisites = e.nombreVisites + 1 WHERE e.id = :id")
     int incrementerVisites(@Param("id") UUID id);
+
+    java.util.List<EtablissementSante> findByDirecteurId(java.util.UUID directeurId);
 }

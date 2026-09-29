@@ -26,4 +26,6 @@ public class EtablissementResponse {
     private List<String> specialitesDisponibles;
     private List<String> photos;
     private long nombreVisites;
+    private java.util.UUID directeurId;
+    private String directeurNomComplet;
 }

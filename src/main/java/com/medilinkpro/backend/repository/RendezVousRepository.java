@@ -28,4 +28,13 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, UUID> {
             AND r.statut <> 'ANNULE'
             """)
     boolean existsCreneauOccupe(@Param("medecinId") UUID medecinId, @Param("dateHeure") LocalDateTime dateHeure);
+
+    /** Rendez-vous pris dans un etablissement du directeur, ou avec un medecin de cet etablissement. */
+    @Query("""
+            SELECT r FROM RendezVous r
+            LEFT JOIN r.etablissement e
+            LEFT JOIN r.medecin.etablissement em
+            WHERE e.directeur.id = :directeurId OR (e IS NULL AND em.directeur.id = :directeurId)
+            """)
+    List<RendezVous> findDansEtablissementsDuDirecteur(@Param("directeurId") UUID directeurId);
 }

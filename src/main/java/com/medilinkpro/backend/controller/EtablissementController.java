@@ -3,6 +3,10 @@ package com.medilinkpro.backend.controller;
 import com.medilinkpro.backend.dto.request.EtablissementRequest;
 import com.medilinkpro.backend.dto.response.EtablissementResponse;
 import com.medilinkpro.backend.service.EtablissementService;
+import com.medilinkpro.backend.entity.Utilisateur;
+import com.medilinkpro.backend.service.EtablissementAccesService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,6 +27,7 @@ import java.util.UUID;
 public class EtablissementController {
 
     private final EtablissementService etablissementService;
+    private final EtablissementAccesService etablissementAccesService;
 
     @GetMapping
     @Operation(summary = "Lister tous les etablissements de sante")
@@ -55,20 +60,22 @@ public class EtablissementController {
     }
 
     @PostMapping
-    @Operation(summary = "Creer un etablissement de sante")
-    public ResponseEntity<EtablissementResponse> create(@Valid @RequestBody EtablissementRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(etablissementService.create(request));
+    @Operation(summary = "Creer un etablissement de sante (un directeur en devient le responsable)")
+    public ResponseEntity<EtablissementResponse> create(@Valid @RequestBody EtablissementRequest request, @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(etablissementService.create(request, utilisateur));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Mettre a jour un etablissement de sante")
-    public ResponseEntity<EtablissementResponse> update(@PathVariable UUID id, @Valid @RequestBody EtablissementRequest request) {
+    @Operation(summary = "Mettre a jour un etablissement de sante (son directeur ou l'admin)")
+    public ResponseEntity<EtablissementResponse> update(@PathVariable UUID id, @Valid @RequestBody EtablissementRequest request, @AuthenticationPrincipal Utilisateur utilisateur) {
+        etablissementAccesService.verifierGestion(utilisateur, id);
         return ResponseEntity.ok(etablissementService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer un etablissement de sante")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    @Operation(summary = "Supprimer un etablissement de sante (son directeur ou l'admin)")
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal Utilisateur utilisateur) {
+        etablissementAccesService.verifierGestion(utilisateur, id);
         etablissementService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -77,7 +84,8 @@ public class EtablissementController {
     @Operation(summary = "Uploader une ou plusieurs photos pour un etablissement (carousel de la vitrine publique)")
     public ResponseEntity<EtablissementResponse> ajouterPhotos(
             @PathVariable UUID id,
-            @RequestParam("fichiers") List<MultipartFile> fichiers) {
+            @RequestParam("fichiers") List<MultipartFile> fichiers, @AuthenticationPrincipal Utilisateur utilisateur) {
+        etablissementAccesService.verifierGestion(utilisateur, id);
         return ResponseEntity.status(HttpStatus.CREATED).body(etablissementService.ajouterPhotos(id, fichiers));
     }
 
@@ -85,7 +93,8 @@ public class EtablissementController {
     @Operation(summary = "Supprimer une photo d'un etablissement")
     public ResponseEntity<EtablissementResponse> supprimerPhoto(
             @PathVariable UUID id,
-            @RequestParam("url") String url) {
+            @RequestParam("url") String url, @AuthenticationPrincipal Utilisateur utilisateur) {
+        etablissementAccesService.verifierGestion(utilisateur, id);
         return ResponseEntity.ok(etablissementService.supprimerPhoto(id, url));
     }
 }

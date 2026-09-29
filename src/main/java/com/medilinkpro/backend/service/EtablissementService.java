@@ -3,7 +3,9 @@ package com.medilinkpro.backend.service;
 import com.medilinkpro.backend.dto.mapper.EtablissementMapper;
 import com.medilinkpro.backend.dto.request.EtablissementRequest;
 import com.medilinkpro.backend.dto.response.EtablissementResponse;
+import com.medilinkpro.backend.entity.Directeur;
 import com.medilinkpro.backend.entity.EtablissementSante;
+import com.medilinkpro.backend.entity.Utilisateur;
 import com.medilinkpro.backend.exception.ResourceNotFoundException;
 import com.medilinkpro.backend.exception.BadRequestException;
 import com.medilinkpro.backend.repository.EtablissementRepository;
@@ -51,7 +53,7 @@ public class EtablissementService {
     }
 
     @Transactional
-    public EtablissementResponse create(EtablissementRequest request) {
+    public EtablissementResponse create(EtablissementRequest request, Utilisateur createur) {
         EtablissementSante etablissement = EtablissementSante.builder()
                 .nom(request.getNom())
                 .type(request.getType())
@@ -62,6 +64,8 @@ public class EtablissementService {
                 .specialitesDisponibles(request.getSpecialitesDisponibles() != null
                         ? new ArrayList<>(request.getSpecialitesDisponibles())
                         : new ArrayList<>())
+                // Un directeur qui cree un etablissement en devient le responsable.
+                .directeur(createur instanceof Directeur d ? d : null)
                 .build();
 
         return etablissementMapper.toResponse(etablissementRepository.save(etablissement));

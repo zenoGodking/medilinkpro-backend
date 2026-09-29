@@ -76,6 +76,12 @@ public class CampagneService {
         campagneRepository.delete(getOrThrow(id));
     }
 
+    /** Etablissement d'une campagne (controle d'acces du directeur). */
+    @Transactional(readOnly = true)
+    public UUID etablissementIdDe(UUID campagneId) {
+        return getOrThrow(campagneId).getEtablissement().getId();
+    }
+
     private Campagne getOrThrow(UUID id) {
         return campagneRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Campagne non trouvee avec l'id : " + id));

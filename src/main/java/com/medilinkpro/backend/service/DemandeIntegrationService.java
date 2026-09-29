@@ -81,7 +81,7 @@ public class DemandeIntegrationService {
 
     /**
      * Repond a une demande. Si l'etablissement etait a l'origine, seul le medecin concerne
-     * peut repondre. Si le medecin etait a l'origine, seul un Directeur ou un Admin peut repondre.
+     * peut repondre. Si le medecin etait a l'origine, seul le directeur de l'etablissement ou un Admin peut repondre.
      */
     @Transactional
     public DemandeIntegrationResponse repondre(UUID demandeId, UUID actorId, ReponseDemandeIntegrationRequest request) {
@@ -97,10 +97,14 @@ public class DemandeIntegrationService {
 
         boolean autorise = switch (demande.getInitiateur()) {
             case ETABLISSEMENT -> demande.getMedecin().getId().equals(actorId) || acteur.getRole() == Role.ADMIN;
-            case MEDECIN -> acteur.getRole() == Role.DIRECTEUR || acteur.getRole() == Role.ADMIN;
+            // Seul le directeur de CET etablissement (ou l'admin) accepte un medecin qui demande a le rejoindre.
+            case MEDECIN -> acteur.getRole() == Role.ADMIN
+                    || (acteur.getRole() == Role.DIRECTEUR
+                        && demande.getEtablissement().getDirecteur() != null
+                        && demande.getEtablissement().getDirecteur().getId().equals(actorId));
         };
         if (!autorise) {
-            throw new BadRequestException("Vous n'etes pas autorise a repondre a cette demande");
+            throw new org.springframework.security.access.AccessDeniedException("Vous n'etes pas autorise a repondre a cette demande");
         }
 
         if (Boolean.TRUE.equals(request.getAccepter())) {

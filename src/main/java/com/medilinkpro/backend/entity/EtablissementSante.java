@@ -78,4 +78,14 @@ public class EtablissementSante {
     @Builder.Default
     @ToString.Exclude
     private List<Medecin> medecins = new ArrayList<>();
+
+    /**
+     * Directeur responsable de l'etablissement : seul lui (et l'admin) peut le gerer
+     * (fiche, photos, campagnes, integration de medecins) et voir ses patients.
+     * Attribue a la creation par un directeur, ou par l'admin.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "directeur_id")
+    @ToString.Exclude
+    private Directeur directeur;
 }

@@ -21,6 +21,7 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final com.medilinkpro.backend.service.DirecteurService directeurService;
 
     @GetMapping("/comptes-en-attente")
     @Operation(summary = "Lister les comptes professionnels en attente de validation, filtrable par role")
@@ -60,5 +61,12 @@ public class AdminController {
     @Operation(summary = "Activer ou suspendre un compte utilisateur")
     public ResponseEntity<CompteEnAttenteResponse> toggleActif(@PathVariable UUID id) {
         return ResponseEntity.ok(adminService.toggleActif(id));
+    }
+
+    @PatchMapping("/etablissements/{id}/directeur")
+    @Operation(summary = "Attribuer (ou retirer avec directeurId null) le directeur responsable d'un etablissement")
+    public ResponseEntity<com.medilinkpro.backend.dto.response.EtablissementResponse> attribuerDirecteur(
+            @PathVariable UUID id, @RequestBody com.medilinkpro.backend.dto.request.AttributionDirecteurRequest request) {
+        return ResponseEntity.ok(directeurService.attribuerDirecteur(id, request.getDirecteurId()));
     }
 }
