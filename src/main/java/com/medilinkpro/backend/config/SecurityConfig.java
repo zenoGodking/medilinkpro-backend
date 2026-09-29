@@ -96,7 +96,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/patients/*/deces").hasRole("MEDECIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/patients/*/deces").hasRole("ADMIN")
                         .requestMatchers("/api/dossiers-medicaux/**", "/api/consultations/**", "/api/ordonnances/**",
-                                "/api/resultats-analyses/**", "/api/patients/**", "/api/carnets/**")
+                                "/api/resultats-analyses/**", "/api/patients/**", "/api/carnets/**", "/api/suivi/**")
                         .hasAnyRole("PATIENT", "MEDECIN", "ADMIN")
 
                         // Rendez-vous : Patient, Medecin, Admin (participants verifies dans le controleur)
