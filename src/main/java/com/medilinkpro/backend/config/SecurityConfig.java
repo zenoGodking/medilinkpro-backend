@@ -75,6 +75,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/reconnaissance-faciale/moi/**").hasRole("PATIENT")
                         .requestMatchers("/api/reconnaissance-faciale/**").denyAll()
 
+                        // Carte d'urgence (QR) : reservee aux utilisateurs connectes, le patient gere la sienne
+                        .requestMatchers("/api/carte-urgence/moi/**", "/api/carte-urgence/moi").hasRole("PATIENT")
+                        .requestMatchers(HttpMethod.GET, "/api/carte-urgence/*").authenticated()
+
                         // Administration
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

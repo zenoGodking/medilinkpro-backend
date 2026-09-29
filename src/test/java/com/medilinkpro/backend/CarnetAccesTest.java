@@ -175,6 +175,43 @@ class CarnetAccesTest {
         appeler(get("/api/carnets/journal"), drKamga).andExpect(status().isForbidden());
     }
 
+    // ---------------------------------------------------------------- Carte d'urgence (QR)
+
+    @Test
+    void carteDUrgenceScanneeParUnUtilisateurConnecte() throws Exception {
+        String jeton = json(appeler(get("/api/carte-urgence/moi"), aline).andExpect(status().isOk())).get("jeton").asText();
+        assertThat(jeton).hasSizeGreaterThanOrEqualTo(32);
+        // Stable tant qu'on ne regenere pas
+        assertThat(json(appeler(get("/api/carte-urgence/moi"), aline)).get("jeton").asText()).isEqualTo(jeton);
+
+        // Sans connexion : refuse
+        mockMvc.perform(get("/api/carte-urgence/" + jeton)).andExpect(status().is4xxClientError());
+
+        // Un autre patient voit l'essentiel, sans identite complete
+        JsonNode vueBruno = json(appeler(get("/api/carte-urgence/" + jeton), bruno).andExpect(status().isOk()));
+        assertThat(vueBruno.get("prenom").asText()).isEqualTo("Aline");
+        assertThat(vueBruno.get("contactUrgenceTelephone").asText()).isEqualTo("+237677000001");
+        assertThat(vueBruno.has("nom")).isFalse();
+        assertThat(vueBruno.has("patientId")).isFalse();
+
+        // Un medecin voit l'identite et peut ouvrir le carnet d'urgence
+        JsonNode vueMedecin = json(appeler(get("/api/carte-urgence/" + jeton), drKamga));
+        assertThat(vueMedecin.get("patientId").asText()).isEqualTo(aline.getId().toString());
+
+        // Le scan apparait dans le journal d'Aline
+        JsonNode journal = json(appeler(get("/api/carnets/journal"), aline));
+        assertThat(journal).extracting(a -> a.get("typeAcces").asText()).contains("CARTE_URGENCE");
+
+        // Carte perdue : nouveau code, l'ancien ne mene plus a rien
+        String nouveau = json(appeler(post("/api/carte-urgence/moi/regenerer"), aline)).get("jeton").asText();
+        assertThat(nouveau).isNotEqualTo(jeton);
+        appeler(get("/api/carte-urgence/" + jeton), drKamga).andExpect(status().isNotFound());
+        appeler(get("/api/carte-urgence/" + nouveau), drKamga).andExpect(status().isOk());
+
+        // Un medecin n'a pas de carte a gerer
+        appeler(get("/api/carte-urgence/moi"), drKamga).andExpect(status().isForbidden());
+    }
+
     // ---------------------------------------------------------------- Deces
 
     @Test

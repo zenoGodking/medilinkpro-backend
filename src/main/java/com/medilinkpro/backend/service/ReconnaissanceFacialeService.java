@@ -220,7 +220,8 @@ public class ReconnaissanceFacialeService {
                 && u.isActif();
     }
 
-    private String photoDataUrl(Patient patient) {
+    /** Photo de reference du patient en data URL (null si absente). */
+    public String photoDataUrl(Patient patient) {
         String chemin = patient.getPhotoFacialeChemin();
         if (chemin == null) {
             return null;

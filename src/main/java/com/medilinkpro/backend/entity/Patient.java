@@ -51,6 +51,15 @@ public class Patient extends Utilisateur {
     @Column(name = "conditions_urgence", columnDefinition = "TEXT")
     private String conditionsUrgence;
 
+    /**
+     * Jeton aleatoire (192 bits) encode dans le QR code de la carte d'urgence. Il ne contient
+     * aucune donnee : il permet seulement, a un utilisateur connecte, d'afficher les informations
+     * d'urgence. Le patient peut le regenerer pour invalider une carte perdue.
+     */
+    @JsonIgnore
+    @Column(name = "jeton_carte_urgence", length = 64, unique = true)
+    private String jetonCarteUrgence;
+
     /** Deces declare par un medecin : le compte est desactive et le proche est informe. */
     @Builder.Default
     @Column(name = "decede", nullable = false)
