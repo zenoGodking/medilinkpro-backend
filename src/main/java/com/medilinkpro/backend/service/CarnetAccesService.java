@@ -21,6 +21,7 @@ import com.medilinkpro.backend.enums.Role;
 import com.medilinkpro.backend.enums.StatutAlerte;
 import com.medilinkpro.backend.enums.StatutCompte;
 import com.medilinkpro.backend.enums.StatutRendezVous;
+import com.medilinkpro.backend.enums.TypeAccesCarnet;
 import com.medilinkpro.backend.exception.BadRequestException;
 import com.medilinkpro.backend.exception.ResourceNotFoundException;
 import com.medilinkpro.backend.repository.AlerteSoinDomicileRepository;
@@ -71,6 +72,7 @@ public class CarnetAccesService {
     private final OrdonnanceRepository ordonnanceRepository;
     private final AlerteSoinDomicileRepository alerteRepository;
     private final NotificationSmsService notificationSmsService;
+    private final JournalAccesService journalAccesService;
     private final PatientMapper patientMapper;
     private final ConsultationMapper consultationMapper;
     private final DossierMedicalMapper dossierMedicalMapper;
@@ -90,6 +92,7 @@ public class CarnetAccesService {
         if (!autorise) {
             throw new AccessDeniedException("Vous n'avez pas acces a ce carnet medical");
         }
+        journalAccesService.enregistrer(patientId, u, TypeAccesCarnet.LECTURE);
     }
 
     /** Lecture d'une liste globale (tous les patients, toutes les consultations...). */
@@ -125,6 +128,7 @@ public class CarnetAccesService {
             throw new AccessDeniedException(
                     "Vous pouvez consulter ce carnet mais pas y ecrire : le patient doit d'abord vous y autoriser.");
         }
+        journalAccesService.enregistrer(patientId, u, TypeAccesCarnet.ECRITURE);
     }
 
     // ------------------------------------------------------------------ Carnet
@@ -250,6 +254,7 @@ public class CarnetAccesService {
         patient.setDecesDeclarePar(declarant.getId());
         patient.setDateDeclarationDeces(LocalDateTime.now());
         patientRepository.save(patient);
+        journalAccesService.enregistrer(patientId, declarant, TypeAccesCarnet.DECLARATION_DECES);
 
         alerteRepository.findByPatientIdOrderByDateCreationDesc(patientId).stream()
                 .filter(a -> a.getStatut() == StatutAlerte.EN_ATTENTE)

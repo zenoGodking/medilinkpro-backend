@@ -14,6 +14,7 @@ import com.medilinkpro.backend.enums.NiveauAccesUrgence;
 import com.medilinkpro.backend.enums.NiveauConfiance;
 import com.medilinkpro.backend.enums.Role;
 import com.medilinkpro.backend.enums.StatutCompte;
+import com.medilinkpro.backend.enums.TypeAccesCarnet;
 import com.medilinkpro.backend.exception.BadRequestException;
 import com.medilinkpro.backend.exception.ResourceNotFoundException;
 import com.medilinkpro.backend.repository.AccesUrgenceLogRepository;
@@ -78,6 +79,7 @@ public class ReconnaissanceFacialeService {
     private final ConsultationMapper consultationMapper;
     private final DossierMedicalMapper dossierMedicalMapper;
     private final OrdonnanceMapper ordonnanceMapper;
+    private final JournalAccesService journalAccesService;
 
     /**
      * Enregistre (ou remplace) la photo de reference et l'empreinte faciale d'un patient.
@@ -122,6 +124,10 @@ public class ReconnaissanceFacialeService {
         boolean ambigu = meilleures.size() >= 2
                 && meilleures.get(1).distance() - meilleures.get(0).distance() < ECART_AMBIGUITE;
 
+        // Chaque candidat renvoye a vu ses donnees d'urgence montrees : il le verra dans son journal.
+        meilleures.forEach(c -> journalAccesService.enregistrer(
+                c.patient().getId(), demandeur, TypeAccesCarnet.RECONNAISSANCE_FACIALE));
+
         journaliser(demandeur, AccesUrgenceLog.TypeAcces.RECHERCHE_FACIALE,
                 meilleures.isEmpty() ? null : meilleures.get(0).patient().getId(),
                 meilleures.size(),
@@ -148,6 +154,7 @@ public class ReconnaissanceFacialeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient non trouve avec l'id : " + patientId));
 
         journaliser(demandeur, AccesUrgenceLog.TypeAcces.CARNET_COMPLET, patientId, null, null);
+        journalAccesService.enregistrer(patientId, demandeur, TypeAccesCarnet.CARNET_URGENCE);
 
         var dossier = patient.getDossierMedical();
         return CarnetUrgenceResponse.builder()

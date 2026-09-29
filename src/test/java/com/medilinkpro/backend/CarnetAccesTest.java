@@ -150,6 +150,31 @@ class CarnetAccesTest {
         assertThat(accessibles.get(0).get("id").asText()).isEqualTo(aline.getId().toString());
     }
 
+    // ---------------------------------------------------------------- Journal
+
+    @Test
+    void lePatientVoitQuiAConsulteEtModifieSonCarnet() throws Exception {
+        // Plusieurs lectures rapprochees par le meme medecin = une seule ligne
+        appeler(get("/api/carnets/" + aline.getId()), drKamga).andExpect(status().isOk());
+        appeler(get("/api/consultations/patient/" + aline.getId()), drKamga).andExpect(status().isOk());
+        appeler(post("/api/carnets/autorisations").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"medecinId\":\"" + drKamga.getId() + "\"}"), aline).andExpect(status().isOk());
+        creerConsultation(drKamga, aline).andExpect(status().isCreated());
+        // Ses propres lectures ne sont pas journalisees
+        appeler(get("/api/carnets/" + aline.getId()), aline).andExpect(status().isOk());
+
+        JsonNode journal = json(appeler(get("/api/carnets/journal"), aline).andExpect(status().isOk()));
+        assertThat(journal).hasSize(2);
+        assertThat(journal.get(0).get("typeAcces").asText()).isEqualTo("ECRITURE");
+        assertThat(journal.get(1).get("typeAcces").asText()).isEqualTo("LECTURE");
+        assertThat(journal.get(1).get("nom").asText()).isEqualTo("Test kamga");
+        assertThat(journal.get(1).get("role").asText()).isEqualTo("MEDECIN");
+
+        // Le journal de Bruno est vide, et un medecin n'a pas de journal patient
+        assertThat(json(appeler(get("/api/carnets/journal"), bruno))).isEmpty();
+        appeler(get("/api/carnets/journal"), drKamga).andExpect(status().isForbidden());
+    }
+
     // ---------------------------------------------------------------- Deces
 
     @Test
