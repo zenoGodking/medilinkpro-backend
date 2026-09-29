@@ -27,4 +27,6 @@ public class OrdonnanceResponse {
     private String posologie;
     private String signatureElectronique;
     private String codeQr;
+    private LocalDateTime dateDelivrance;
+    private String delivreePar;
 }

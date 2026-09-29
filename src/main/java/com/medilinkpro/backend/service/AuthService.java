@@ -188,6 +188,20 @@ public class AuthService {
                     .build();
 
 
+            case PHARMACIEN -> Pharmacien.builder()
+                    .nom(request.getNom())
+                    .prenom(request.getPrenom())
+                    .email(request.getEmail())
+                    .motDePasse(encodedPassword)
+                    .telephone(request.getTelephone())
+                    .actif(true)
+                    .role(Role.PHARMACIEN)
+                    .statutCompte(statutCompte)
+                    .nomPharmacie(request.getNomPharmacie())
+                    .numeroAgrement(request.getNumeroAgrement())
+                    .ville(request.getVille())
+                    .build();
+
             case INFIRMIER -> Infirmier.builder()
                     .nom(request.getNom())
                     .prenom(request.getPrenom())

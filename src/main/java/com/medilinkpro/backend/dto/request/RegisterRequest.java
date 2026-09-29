@@ -61,4 +61,8 @@ public class RegisterRequest {
     private String ville;
     private String quartier;
     private java.math.BigDecimal tarif;
+
+    // Champs specifiques PHARMACIEN
+    private String nomPharmacie;
+    private String numeroAgrement;
 }

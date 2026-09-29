@@ -58,4 +58,21 @@ public class Ordonnance {
 
     @Column(name = "code_qr", length = 255)
     private String codeQr;
+
+    /**
+     * Jeton aleatoire (192 bits) encode dans le QR code montre en pharmacie. Genere a la demande
+     * pour les ordonnances anterieures a cette fonctionnalite.
+     */
+    @Column(name = "jeton_verification", length = 64, unique = true)
+    private String jetonVerification;
+
+    @Column(name = "date_delivrance")
+    private LocalDateTime dateDelivrance;
+
+    @Column(name = "pharmacien_id")
+    private java.util.UUID pharmacienId;
+
+    /** Pharmacie et pharmacien au moment de la delivrance (conserves meme si le compte disparait). */
+    @Column(name = "delivree_par", length = 300)
+    private String delivreePar;
 }

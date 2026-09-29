@@ -9,5 +9,6 @@ public enum Role {
     MEDECIN,
     ADMIN,
     DIRECTEUR,
-    INFIRMIER
+    INFIRMIER,
+    PHARMACIEN
 }

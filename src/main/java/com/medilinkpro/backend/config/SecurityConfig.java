@@ -79,6 +79,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/carte-urgence/moi/**", "/api/carte-urgence/moi").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET, "/api/carte-urgence/*").authenticated()
 
+                        // Pharmacie : le patient obtient le QR de ses ordonnances, le pharmacien verifie et delivre
+                        .requestMatchers(HttpMethod.GET, "/api/pharmacie/ordonnances/*/qr").hasRole("PATIENT")
+                        .requestMatchers("/api/pharmacie/**").hasRole("PHARMACIEN")
+
                         // Espace directeur : ses etablissements et leurs patients (identite seulement)
                         .requestMatchers("/api/directeur/**").hasRole("DIRECTEUR")
 
