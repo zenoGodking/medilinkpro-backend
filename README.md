@@ -169,3 +169,50 @@ src/main/java/com/medilinkpro/backend/
 ├── config/           # SecurityConfig, OpenApiConfig
 └── exception/        # Exceptions metier + GlobalExceptionHandler
 ```
+
+## Identification d'urgence par reconnaissance faciale
+
+A l'inscription, chaque patient envoie obligatoirement une photo de son visage
+(`POST /api/auth/register` en `multipart/form-data` : parties `donnees`, `photo`, `descripteur`).
+Le navigateur calcule l'empreinte faciale (128 reels, face-api) ; le backend stocke la photo dans
+un dossier **prive** (`medilinkpro.upload.private-dir`, jamais servi statiquement) et l'empreinte en base.
+
+| Endpoint | Acces | Contenu |
+|---|---|---|
+| `POST /api/reconnaissance-faciale/recherche` | tout utilisateur connecte | au plus 3 correspondances **probables** (distance < 0.6), score de confiance, photo de reference, prenom, groupe sanguin, allergies, contact d'un proche (+ nom et date de naissance pour le personnel de sante) |
+| `GET /api/reconnaissance-faciale/patients/{id}/carnet` | Medecin, Infirmier, Secretaire au compte approuve | carnet complet en lecture seule |
+| `GET/PUT /api/reconnaissance-faciale/moi/photo` | Patient | consulter / remplacer sa photo |
+
+Chaque recherche et chaque consultation de carnet est journalisee dans `acces_urgence_logs`.
+
+## Soins a domicile geolocalises
+
+- L'application de l'infirmiere partage sa position GPS en continu (STOMP `/app/infirmiers/position`,
+  ou `PUT /api/alertes/infirmiers/moi/position`) tant que sa page d'alertes est ouverte.
+- A l'envoi d'une alerte avec la position du patient, seules les **5 infirmieres disponibles les plus
+  proches** (rayon 20 km, position de moins de 15 min, sans intervention en cours) sont notifiees en prive
+  (`/user/queue/alertes`), avec leur distance au patient. Sans reponse sous 2 min, la vague suivante est
+  notifiee ; quand il n'y a plus personne a proximite, l'alerte passe en diffusion generale (`/topic/alertes`).
+  Sans position du patient, la diffusion est generale d'emblee.
+- Des qu'une infirmiere accepte, le patient recoit son telephone et suit sa position en temps reel
+  (`/user/queue/suivi`, etat initial via `GET /api/alertes/{id}/suivi`). Le partage s'arrete a la fin de l'intervention.
+- Reglages : constantes `TAILLE_VAGUE`, `RAYON_MAX_KM`, `FRAICHEUR_POSITION_MINUTES`, `DELAI_ELARGISSEMENT_SECONDES` dans `AlerteService`.
+
+## Acces au carnet medical
+
+| Qui | Lecture | Ecriture |
+|---|---|---|
+| Patient | son propre carnet uniquement ; pour les autres, seulement les donnees d'urgence via la reconnaissance faciale | sa fiche (identite, contact, informations d'urgence) |
+| Medecin (compte approuve) | tous les carnets | seulement si le patient l'a autorise (`/api/carnets/autorisations`) ou s'il est son ancien patient (consultation, rendez-vous confirme/termine) ; uniquement les donnees medicales de la fiche |
+| Tout medecin | — | declaration de deces (`POST /api/patients/{id}/deces`) : compte desactive, alertes annulees, proche informe par SMS |
+| Admin | tout | annulation d'une declaration de deces erronee |
+
+Regles centralisees dans `CarnetAccesService`. Seul le patient peut prendre rendez-vous pour lui-meme
+(un medecin ne peut pas s'attribuer un patient).
+
+**SMS** : aucun fournisseur n'est branche. Les messages sont enregistres dans `notifications_sms`
+avec le statut `NON_ENVOYE_AUCUN_FOURNISSEUR`. Pour envoyer reellement, declarer un bean implementant
+`service.sms.FournisseurSms` (Twilio, Africa's Talking, operateur local...).
+
+**Role Secretaire supprime** : au demarrage, `SuppressionSecretairesMigration` supprime les comptes
+secretaires existants et la table `secretaires`.

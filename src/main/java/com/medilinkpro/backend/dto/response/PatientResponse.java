@@ -26,7 +26,13 @@ public class PatientResponse {
     private GroupeSanguin groupeSanguin;
     private String allergies;
     private String antecedents;
+    private String conditionsUrgence;
+    private boolean decede;
+    private LocalDate dateDeces;
     private String numSecuriteSociale;
     private String contactUrgenceNom;
     private String contactUrgenceTelephone;
+
+    /** Vrai si le patient a enregistre une photo faciale (necessaire pour etre retrouve en urgence). */
+    private boolean photoFacialeEnregistree;
 }

@@ -2,6 +2,7 @@ package com.medilinkpro.backend.service;
 
 import com.medilinkpro.backend.config.FileStorageProperties;
 import com.medilinkpro.backend.exception.BadRequestException;
+import com.medilinkpro.backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -36,6 +37,50 @@ public class FileStorageService {
      * l'URL publique (relative) a stocker en base de donnees.
      */
     public String storeImage(MultipartFile file, String subFolder) {
+        Path stored = writeImage(file, Paths.get(fileStorageProperties.getDir(), subFolder));
+        return fileStorageProperties.getUrlPrefix() + "/" + subFolder + "/" + stored.getFileName();
+    }
+
+    /**
+     * Enregistre une image sensible (ex: photo faciale d'un patient) dans le dossier prive,
+     * qui n'est pas servi statiquement. Retourne le chemin relatif a stocker en base ;
+     * le fichier se relit uniquement via readPrivate.
+     */
+    public String storePrivateImage(MultipartFile file, String subFolder) {
+        Path stored = writeImage(file, Paths.get(fileStorageProperties.getPrivateDir(), subFolder));
+        return subFolder + "/" + stored.getFileName();
+    }
+
+    /** Relit un fichier du dossier prive a partir du chemin relatif retourne par storePrivateImage. */
+    public byte[] readPrivate(String relativePath) {
+        try {
+            return Files.readAllBytes(resolvePrivate(relativePath));
+        } catch (IOException e) {
+            throw new ResourceNotFoundException("Fichier introuvable");
+        }
+    }
+
+    public void deletePrivate(String relativePath) {
+        if (relativePath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(resolvePrivate(relativePath));
+        } catch (IOException ignored) {
+            // Suppression best-effort, comme deleteByUrl.
+        }
+    }
+
+    private Path resolvePrivate(String relativePath) {
+        Path root = Paths.get(fileStorageProperties.getPrivateDir()).toAbsolutePath().normalize();
+        Path path = root.resolve(relativePath).normalize();
+        if (!path.startsWith(root)) {
+            throw new BadRequestException("Chemin de fichier invalide");
+        }
+        return path;
+    }
+
+    private Path writeImage(MultipartFile file, Path dir) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Le fichier envoye est vide");
         }
@@ -54,7 +99,7 @@ public class FileStorageService {
         }
 
         try {
-            Path targetDir = Paths.get(fileStorageProperties.getDir(), subFolder).toAbsolutePath().normalize();
+            Path targetDir = dir.toAbsolutePath().normalize();
             Files.createDirectories(targetDir);
 
             String filename = UUID.randomUUID() + "." + extension;
@@ -64,7 +109,7 @@ public class FileStorageService {
                 Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            return fileStorageProperties.getUrlPrefix() + "/" + subFolder + "/" + filename;
+            return targetPath;
         } catch (IOException e) {
             throw new BadRequestException("Erreur lors de l'enregistrement du fichier : " + e.getMessage());
         }

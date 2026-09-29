@@ -37,6 +37,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, "Email ou mot de passe incorrect", request, null);
     }
 
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(org.springframework.security.authentication.DisabledException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Ce compte est desactive", request, null);
+    }
+
     @ExceptionHandler(com.medilinkpro.backend.exception.CompteNonValideException.class)
     public ResponseEntity<ErrorResponse> handleCompteNonValide(com.medilinkpro.backend.exception.CompteNonValideException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request, null);
@@ -59,6 +64,11 @@ public class GlobalExceptionHandler {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         return buildResponse(HttpStatus.BAD_REQUEST, "Erreur de validation des donnees", request, errors);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadable(org.springframework.http.converter.HttpMessageNotReadableException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Requete invalide : corps illisible ou valeur non reconnue", request, null);
     }
 
     @ExceptionHandler(Exception.class)

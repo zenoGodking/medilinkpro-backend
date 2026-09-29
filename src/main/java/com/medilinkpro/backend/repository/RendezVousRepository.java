@@ -18,6 +18,8 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, UUID> {
 
     List<RendezVous> findByStatut(StatutRendezVous statut);
 
+    boolean existsByPatientIdAndMedecinIdAndStatutIn(UUID patientId, UUID medecinId, java.util.Collection<StatutRendezVous> statuts);
+
     @Query("""
             SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END
             FROM RendezVous r

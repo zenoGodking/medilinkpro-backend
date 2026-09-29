@@ -20,4 +20,10 @@ public class FileStorageProperties {
 
     /** Prefixe d'URL sous lequel les fichiers sont servis (voir WebMvcConfig). */
     private String urlPrefix = "/uploads";
+
+    /**
+     * Dossier disque des fichiers sensibles (photos faciales des patients). Il n'est PAS
+     * expose par WebMvcConfig : ces fichiers ne sont servis que par des endpoints authentifies.
+     */
+    private String privateDir = "private-uploads";
 }

@@ -1,1 +1,5 @@
 target/
+
+# Fichiers uploades (photos d etablissements, photos faciales des patients) : ne jamais versionner
+uploads/
+private-uploads/

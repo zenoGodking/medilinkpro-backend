@@ -13,4 +13,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, UUID
     List<Consultation> findByMedecinId(UUID medecinId);
 
     List<Consultation> findByPatientId(UUID patientId);
+
+    boolean existsByPatientIdAndMedecinId(UUID patientId, UUID medecinId);
 }

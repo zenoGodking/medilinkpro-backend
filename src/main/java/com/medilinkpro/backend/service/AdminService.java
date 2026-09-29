@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Administration des comptes utilisateurs : validation des inscriptions
- * professionnelles (Medecin, Secretaire, Directeur, Infirmier), et gestion
+ * professionnelles (Medecin, Directeur, Infirmier), et gestion
  * complete (liste, suspension, suppression) de tous les comptes.
  */
 @Service

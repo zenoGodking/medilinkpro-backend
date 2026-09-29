@@ -23,6 +23,7 @@ public class PatientUpdateRequest {
     private GroupeSanguin groupeSanguin;
     private String allergies;
     private String antecedents;
+    private String conditionsUrgence;
     private String numSecuriteSociale;
     private String contactUrgenceNom;
     private String contactUrgenceTelephone;

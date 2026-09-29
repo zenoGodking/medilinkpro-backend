@@ -32,6 +32,13 @@ spring:
       max-request-size: 25MB
 
 medilinkpro:
+  # Super administrateur cree au premier demarrage s'il n'existe pas (voir AdminInitializer).
+  # En production, surchargez au minimum SUPER_ADMIN_PASSWORD par variable d'environnement.
+  super-admin:
+    nom: ${SUPER_ADMIN_NOM:admin}
+    prenom: ${SUPER_ADMIN_PRENOM:Super}
+    email: ${SUPER_ADMIN_EMAIL:womeloic@gmail.com}
+    mot-de-passe: ${SUPER_ADMIN_PASSWORD:Hope123}
   jwt:
     # Cle secrete encodee en Base64 (HS256). A changer en production via variable d'environnement.
     secret: ${JWT_SECRET:NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4}
@@ -41,6 +48,8 @@ medilinkpro:
     # En Docker, ce chemin est monte sur un volume persistant (voir docker-compose.yml).
     dir: ${UPLOAD_DIR:uploads}
     url-prefix: /uploads
+    # Photos faciales des patients : dossier NON expose publiquement (servi via endpoints authentifies).
+    private-dir: ${PRIVATE_UPLOAD_DIR:private-uploads}
 
 springdoc:
   swagger-ui:

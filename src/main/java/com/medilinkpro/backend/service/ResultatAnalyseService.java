@@ -59,4 +59,20 @@ public class ResultatAnalyseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resultat d'analyse non trouve avec l'id : " + id));
         resultatAnalyseRepository.delete(resultat);
     }
+
+    /** Patient proprietaire d'un dossier medical (pour les controles d'acces). */
+    @Transactional(readOnly = true)
+    public UUID patientIdDuDossier(UUID dossierId) {
+        return dossierMedicalRepository.findById(dossierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier medical non trouve avec l'id : " + dossierId))
+                .getPatient().getId();
+    }
+
+    /** Patient proprietaire d'un resultat d'analyse (pour les controles d'acces). */
+    @Transactional(readOnly = true)
+    public UUID patientIdDuResultat(UUID resultatId) {
+        return resultatAnalyseRepository.findById(resultatId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resultat d'analyse non trouve avec l'id : " + resultatId))
+                .getDossierMedical().getPatient().getId();
+    }
 }

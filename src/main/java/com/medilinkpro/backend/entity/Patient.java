@@ -43,6 +43,31 @@ public class Patient extends Utilisateur {
     @Column(name = "antecedents", columnDefinition = "TEXT")
     private String antecedents;
 
+    /**
+     * Conditions a signaler aux secours (asthme, diabete, epilepsie, pacemaker...), renseignees
+     * par le patient en sachant qu'elles sont visibles de tout utilisateur qui le retrouve
+     * accidente (contrairement aux antecedents, reserves au personnel de sante).
+     */
+    @Column(name = "conditions_urgence", columnDefinition = "TEXT")
+    private String conditionsUrgence;
+
+    /** Deces declare par un medecin : le compte est desactive et le proche est informe. */
+    @Builder.Default
+    @Column(name = "decede", nullable = false)
+    private boolean decede = false;
+
+    @Column(name = "date_deces")
+    private LocalDate dateDeces;
+
+    @Column(name = "circonstances_deces", columnDefinition = "TEXT")
+    private String circonstancesDeces;
+
+    @Column(name = "deces_declare_par")
+    private java.util.UUID decesDeclarePar;
+
+    @Column(name = "date_declaration_deces")
+    private java.time.LocalDateTime dateDeclarationDeces;
+
     @Column(name = "num_securite_sociale", length = 50)
     private String numSecuriteSociale;
 
@@ -52,6 +77,22 @@ public class Patient extends Utilisateur {
 
     @Column(name = "contact_urgence_telephone", length = 30)
     private String contactUrgenceTelephone;
+
+    /**
+     * Photo de reference du visage, stockee hors du dossier public /uploads
+     * (voir FileStorageService.storePrivateImage) : chemin relatif interne, jamais expose tel quel.
+     */
+    @JsonIgnore
+    @Column(name = "photo_faciale_chemin", length = 255)
+    private String photoFacialeChemin;
+
+    /**
+     * Empreinte faciale (vecteur de 128 reels calcule par face-api), serialisee en texte.
+     * Sert a la recherche par reconnaissance faciale en cas d'urgence (voir ReconnaissanceFacialeService).
+     */
+    @JsonIgnore
+    @Column(name = "descripteur_facial", columnDefinition = "TEXT")
+    private String descripteurFacial;
 
     @JsonIgnore
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
@@ -63,4 +104,11 @@ public class Patient extends Utilisateur {
     @Builder.Default
     @ToString.Exclude
     private List<RendezVous> rendezVousList = new ArrayList<>();
+
+    /** Un patient declare decede ne peut plus se connecter (ni utiliser un token deja emis). */
+    @Override
+    @JsonIgnore
+    public boolean isEnabled() {
+        return super.isEnabled() && !decede;
+    }
 }

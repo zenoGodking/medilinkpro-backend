@@ -16,7 +16,7 @@ import java.time.LocalDate;
 
 /**
  * Requete d'inscription. Le champ "role" determine le type concret cree
- * (PATIENT, MEDECIN, ADMIN, DIRECTEUR, SECRETAIRE).
+ * (PATIENT, MEDECIN, INFIRMIER, ADMIN, DIRECTEUR).
  * Les champs specifiques au patient ou au medecin sont optionnels selon le role choisi.
  */
 @Getter
@@ -50,6 +50,7 @@ public class RegisterRequest {
     private GroupeSanguin groupeSanguin;
     private String allergies;
     private String antecedents;
+    private String conditionsUrgence;
     private String numSecuriteSociale;
     private String contactUrgenceNom;
     private String contactUrgenceTelephone;

@@ -1,5 +1,6 @@
 package com.medilinkpro.backend.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
 
 /**
  * Infirmier(e) : intervient a domicile en reponse aux alertes de soins envoyees
@@ -24,4 +27,19 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 public class Infirmier extends Utilisateur {
+
+    /**
+     * Derniere position GPS connue, envoyee en continu par l'application tant que
+     * l'infirmiere a sa page d'alertes ouverte (voir PositionInfirmierController).
+     * Sert a notifier les infirmieres les plus proches d'une alerte, puis au suivi
+     * en temps reel par le patient pendant l'intervention.
+     */
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "date_position")
+    private LocalDateTime datePosition;
 }

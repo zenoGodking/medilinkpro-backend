@@ -34,6 +34,14 @@ public class AlerteResponse {
     private UUID infirmierId;
     private String infirmierNom;
     private String infirmierPrenom;
+    /** Communique au patient une fois qu'une infirmiere a accepte la mission. */
+    private String infirmierTelephone;
+
+    /** Distance (km) entre l'infirmiere destinataire et le patient ; renseignee dans ses notifications. */
+    private Double distanceKm;
+    /** Nombre d'infirmieres a proximite deja notifiees (vagues successives). */
+    private Integer nombreInfirmiersNotifies;
+    private Boolean diffusionGenerale;
 
     private LocalDateTime dateCreation;
     private LocalDateTime dateReponse;

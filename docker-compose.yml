@@ -35,11 +35,14 @@ services:
       JWT_SECRET: NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4
       JWT_EXPIRATION_MS: 86400000
       UPLOAD_DIR: /app/uploads
+      PRIVATE_UPLOAD_DIR: /app/private-uploads
     ports:
       - "8080:8080"
     volumes:
       - medilinkpro-uploads:/app/uploads
+      - medilinkpro-private-uploads:/app/private-uploads
 
 volumes:
   medilinkpro-pgdata:
   medilinkpro-uploads:
+  medilinkpro-private-uploads:

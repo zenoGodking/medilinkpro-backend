@@ -39,7 +39,6 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/**",
-            "/api/urgence/**",
             "/api/etablissements/public/**",
             "/api/campagnes/actives",
             "/uploads/**",
@@ -67,27 +66,37 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/etablissements/**").hasAnyRole("DIRECTEUR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/etablissements/**").hasAnyRole("DIRECTEUR", "ADMIN")
 
+                        // Reconnaissance faciale d'urgence : recherche ouverte a tout utilisateur connecte
+                        // (donnees essentielles), carnet complet en lecture seule pour le personnel de sante
+                        // (le service verifie en plus que le compte est approuve), photo geree par le patient.
+                        .requestMatchers(HttpMethod.POST, "/api/reconnaissance-faciale/recherche").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reconnaissance-faciale/patients/*/carnet")
+                        .hasAnyRole("MEDECIN", "INFIRMIER")
+                        .requestMatchers("/api/reconnaissance-faciale/moi/**").hasRole("PATIENT")
+                        .requestMatchers("/api/reconnaissance-faciale/**").denyAll()
+
                         // Administration
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Tableau de bord / statistiques : Directeur et Admin
                         .requestMatchers("/api/dashboard/**").hasAnyRole("DIRECTEUR", "ADMIN")
 
-                        // Dossiers medicaux : Patient, Medecin, Secretaire, Admin
-                        .requestMatchers("/api/dossiers-medicaux/**")
-                        .hasAnyRole("PATIENT", "MEDECIN", "SECRETAIRE", "ADMIN")
+                        // Carnet medical (dossiers, consultations, ordonnances, analyses, fiche patient) :
+                        // premier filtre par role ici, regles fines dans CarnetAccesService :
+                        // - lecture : le patient pour lui-meme, tout medecin valide, l'administrateur ;
+                        // - ecriture : medecin autorise par le patient ou ancien patient ;
+                        // - declaration de deces : tout medecin valide, annulation par l'administrateur.
+                        .requestMatchers(HttpMethod.POST, "/api/patients/*/deces").hasRole("MEDECIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/patients/*/deces").hasRole("ADMIN")
+                        .requestMatchers("/api/dossiers-medicaux/**", "/api/consultations/**", "/api/ordonnances/**",
+                                "/api/resultats-analyses/**", "/api/patients/**", "/api/carnets/**")
+                        .hasAnyRole("PATIENT", "MEDECIN", "ADMIN")
 
-                        // Consultations et ordonnances : Medecin, Patient (lecture), Secretaire, Admin
-                        .requestMatchers("/api/consultations/**", "/api/ordonnances/**")
-                        .hasAnyRole("MEDECIN", "PATIENT", "SECRETAIRE", "ADMIN")
-
-                        // Rendez-vous : Patient, Medecin, Secretaire, Admin
+                        // Rendez-vous : Patient, Medecin, Admin (participants verifies dans le controleur)
                         .requestMatchers("/api/rendez-vous/**")
-                        .hasAnyRole("PATIENT", "MEDECIN", "SECRETAIRE", "ADMIN")
+                        .hasAnyRole("PATIENT", "MEDECIN", "ADMIN")
 
-                        // Gestion des patients et medecins (CRUD complet) : Secretaire, Admin, Directeur
-                        .requestMatchers("/api/patients/**").hasAnyRole("PATIENT", "MEDECIN", "SECRETAIRE", "ADMIN")
-                        .requestMatchers("/api/medecins/**").hasAnyRole("MEDECIN", "SECRETAIRE", "ADMIN", "DIRECTEUR")
+                        .requestMatchers("/api/medecins/**").hasAnyRole("MEDECIN", "ADMIN", "DIRECTEUR")
 
                         // Alertes de soins a domicile : le patient envoie/annule/note ses propres alertes,
                         // l'infirmiere consulte les alertes actives, y repond ou s'en retracte
@@ -100,6 +109,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/alertes/*/retracter").hasAnyRole("INFIRMIER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/alertes/*/compte-rendu").hasAnyRole("INFIRMIER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/alertes/infirmiers/**").hasAnyRole("INFIRMIER", "ADMIN")
+                        // Geolocalisation : l'infirmiere partage sa position, le patient suit celle de
+                        // l'infirmiere en route (le service verifie qu'il s'agit bien de son alerte)
+                        .requestMatchers(HttpMethod.PUT, "/api/alertes/infirmiers/moi/position").hasRole("INFIRMIER")
+                        .requestMatchers(HttpMethod.GET, "/api/alertes/*/suivi").hasRole("PATIENT")
 
                         // Campagnes des etablissements : creation/lecture interne deja couvertes par les
                         // regles /api/etablissements/** ci-dessus ; desactivation/suppression reservees

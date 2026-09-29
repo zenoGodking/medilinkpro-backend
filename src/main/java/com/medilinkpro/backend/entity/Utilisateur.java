@@ -25,7 +25,7 @@ import java.util.UUID;
 
 /**
  * Entite racine Utilisateur. Toute personne s'authentifiant sur MediLinkPro
- * (Patient, Medecin, Admin, Directeur, Secretaire) herite de cette classe.
+ * (Patient, Medecin, Infirmier, Admin, Directeur) herite de cette classe.
  * Strategie d'heritage JOINED : chaque sous-type a sa propre table liee par id.
  * Implemente UserDetails pour s'integrer directement a Spring Security.
  */
@@ -78,7 +78,7 @@ public class Utilisateur implements UserDetails {
 
     /**
      * Statut de validation du compte. Patient et Admin sont APPROUVE des l'inscription.
-     * Medecin, Secretaire et Directeur restent EN_ATTENTE jusqu'a validation par un Admin
+     * Medecin, Infirmier et Directeur restent EN_ATTENTE jusqu'a validation par un Admin
      * (voir AuthService.register et AdminService) : ils ne peuvent pas se connecter avant.
      */
     @lombok.Builder.Default

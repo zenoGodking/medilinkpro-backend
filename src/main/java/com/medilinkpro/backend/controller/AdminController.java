@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@Tag(name = "Administration", description = "Validation des comptes professionnels (Medecin, Secretaire, Directeur)")
+@Tag(name = "Administration", description = "Validation des comptes professionnels (Medecin, Infirmier, Directeur)")
 public class AdminController {
 
     private final AdminService adminService;

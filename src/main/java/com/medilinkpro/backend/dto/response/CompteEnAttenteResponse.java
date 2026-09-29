@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Resume d'un compte professionnel (Medecin, Secretaire, Directeur) destine
+ * Resume d'un compte professionnel (Medecin, Infirmier, Directeur) destine
  * a l'ecran de validation Admin. Les champs specialite/numeroOrdre ne sont
  * renseignes que pour un Medecin.
  */

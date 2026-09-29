@@ -10,11 +10,23 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDomicile, UUID> {
 
     List<AlerteSoinDomicile> findByStatutOrderByDateCreationDesc(StatutAlerte statut);
+
+    /** Alertes en attente dont la derniere vague de notification est plus ancienne que "avant". */
+    @Query("""
+            SELECT a FROM AlerteSoinDomicile a
+            WHERE a.statut = com.medilinkpro.backend.enums.StatutAlerte.EN_ATTENTE
+              AND a.diffusionGenerale = false
+              AND a.dateDerniereDiffusion < :avant
+            """)
+    List<AlerteSoinDomicile> findAElargir(@Param("avant") LocalDateTime avant);
+
+    Optional<AlerteSoinDomicile> findFirstByInfirmierIdAndStatut(UUID infirmierId, StatutAlerte statut);
 
     List<AlerteSoinDomicile> findByPatientIdOrderByDateCreationDesc(UUID patientId);
 
@@ -23,8 +35,9 @@ public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDo
      * que si l'alerte est encore EN_ATTENTE, ce qui evite qu'une deuxieme infirmiere
      * "prenne" la meme alerte en cas de reponse quasi simultanee (race condition).
      * Retourne le nombre de lignes affectees : 0 si l'alerte etait deja prise/annulee.
+     * clearAutomatically : l'appelant a deja charge l'alerte, on force sa relecture apres la mise a jour.
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
             UPDATE AlerteSoinDomicile a
             SET a.statut = com.medilinkpro.backend.enums.StatutAlerte.REPONDUE,

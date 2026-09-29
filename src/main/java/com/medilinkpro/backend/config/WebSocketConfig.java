@@ -12,7 +12,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 /**
  * Canal temps reel utilise pour diffuser les alertes de soins a domicile (F-Alertes) :
  * - /topic/alertes            : broadcast aux infirmieres connectees (nouvelle alerte, alerte prise)
- * - /user/queue/alertes       : messages prives a un patient (sa propre alerte a ete prise)
+ * - /user/queue/alertes       : messages prives (alerte proposee a une infirmiere proche, suivi de son alerte pour un patient)
+ * - /user/queue/suivi         : position en temps reel de l'infirmiere en route, pour le patient
+ * - /app/infirmiers/position  : envoi de la position GPS par l'infirmiere (PositionInfirmierController)
  *
  * L'authentification se fait au niveau de la frame STOMP CONNECT (header Authorization),
  * pas au niveau HTTP : la poignee de main SockJS initiale reste publique (voir SecurityConfig),

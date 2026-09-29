@@ -44,9 +44,26 @@ public class PatientService {
         if (request.getGroupeSanguin() != null) patient.setGroupeSanguin(request.getGroupeSanguin());
         if (request.getAllergies() != null) patient.setAllergies(request.getAllergies());
         if (request.getAntecedents() != null) patient.setAntecedents(request.getAntecedents());
+        if (request.getConditionsUrgence() != null) patient.setConditionsUrgence(request.getConditionsUrgence());
         if (request.getNumSecuriteSociale() != null) patient.setNumSecuriteSociale(request.getNumSecuriteSociale());
         if (request.getContactUrgenceNom() != null) patient.setContactUrgenceNom(request.getContactUrgenceNom());
         if (request.getContactUrgenceTelephone() != null) patient.setContactUrgenceTelephone(request.getContactUrgenceTelephone());
+
+        return patientMapper.toResponse(patientRepository.save(patient));
+    }
+
+    /**
+     * Mise a jour par un medecin autorise : uniquement les donnees medicales du carnet
+     * (l'identite et les coordonnees restent sous le controle du patient).
+     */
+    @Transactional
+    public PatientResponse updateDonneesMedicales(UUID id, PatientUpdateRequest request) {
+        Patient patient = getPatientOrThrow(id);
+
+        if (request.getGroupeSanguin() != null) patient.setGroupeSanguin(request.getGroupeSanguin());
+        if (request.getAllergies() != null) patient.setAllergies(request.getAllergies());
+        if (request.getAntecedents() != null) patient.setAntecedents(request.getAntecedents());
+        if (request.getConditionsUrgence() != null) patient.setConditionsUrgence(request.getConditionsUrgence());
 
         return patientMapper.toResponse(patientRepository.save(patient));
     }

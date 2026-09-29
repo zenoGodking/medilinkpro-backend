@@ -12,12 +12,15 @@ import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Alerte envoyee par un patient a toutes les infirmieres connectees pour demander
- * un soin a domicile. Diffusee en temps reel via WebSocket (voir WebSocketConfig /
- * AlerteService) ; la premiere infirmiere qui repond devient responsable de
+ * Alerte envoyee par un patient pour demander un soin a domicile. Si sa position est
+ * connue, elle est d'abord notifiee aux infirmieres disponibles les plus proches, puis
+ * elargie par vagues (voir AlerteService.diffuser) ; sinon elle est diffusee a toutes
+ * les infirmieres connectees. La premiere infirmiere qui repond devient responsable de
  * l'intervention et l'alerte n'est plus proposee aux autres.
  */
 @Entity
@@ -51,6 +54,24 @@ public class AlerteSoinDomicile {
 
     @Column(name = "message", length = 1000)
     private String message;
+
+    /** Infirmieres a qui l'alerte a deja ete proposee (vagues successives par proximite). */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "alerte_infirmiers_notifies", joinColumns = @JoinColumn(name = "alerte_id"))
+    @Column(name = "infirmier_id")
+    @Builder.Default
+    private Set<UUID> infirmiersNotifies = new HashSet<>();
+
+    /**
+     * Vrai quand l'alerte est proposee a toutes les infirmieres : position du patient inconnue,
+     * ou plus aucune infirmiere disponible a proximite apres elargissement.
+     */
+    @Builder.Default
+    @Column(name = "diffusion_generale", nullable = false)
+    private boolean diffusionGenerale = false;
+
+    @Column(name = "date_derniere_diffusion")
+    private LocalDateTime dateDerniereDiffusion;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

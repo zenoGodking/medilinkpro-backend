@@ -18,12 +18,14 @@ public interface MedecinRepository extends JpaRepository<Medecin, UUID> {
     /**
      * Recherche de medecins par specialite, ville et/ou quartier (filtres optionnels,
      * combinables). Les medecins de la meme ville/quartier remontent en priorite.
+     * CAST(... AS string) : sans lui, PostgreSQL type un parametre null en bytea et
+     * LOWER(bytea) echoue (erreur 500 des qu'un filtre est vide).
      */
     @Query("""
             SELECT m FROM Medecin m
-            WHERE (:specialite IS NULL OR LOWER(m.specialite) LIKE LOWER(CONCAT('%', :specialite, '%')))
-              AND (:ville IS NULL OR LOWER(m.ville) LIKE LOWER(CONCAT('%', :ville, '%')))
-              AND (:quartier IS NULL OR LOWER(m.quartier) LIKE LOWER(CONCAT('%', :quartier, '%')))
+            WHERE (:specialite IS NULL OR LOWER(m.specialite) LIKE LOWER(CONCAT('%', CAST(:specialite AS string), '%')))
+              AND (:ville IS NULL OR LOWER(m.ville) LIKE LOWER(CONCAT('%', CAST(:ville AS string), '%')))
+              AND (:quartier IS NULL OR LOWER(m.quartier) LIKE LOWER(CONCAT('%', CAST(:quartier AS string), '%')))
             ORDER BY m.nom ASC
             """)
     List<Medecin> rechercher(@Param("specialite") String specialite,

@@ -1,7 +1,7 @@
 package com.medilinkpro.backend.enums;
 
 /**
- * Statut de validation d'un compte professionnel (Medecin, Secretaire, Directeur).
+ * Statut de validation d'un compte professionnel (Medecin, Infirmier, Directeur).
  * Un compte EN_ATTENTE ne peut pas se connecter tant qu'un Admin ne l'a pas APPROUVE.
  * Patient et Admin sont APPROUVE des l'inscription (pas de validation requise).
  */
