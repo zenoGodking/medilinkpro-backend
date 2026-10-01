@@ -216,3 +216,69 @@ avec le statut `NON_ENVOYE_AUCUN_FOURNISSEUR`. Pour envoyer reellement, declarer
 
 **Role Secretaire supprime** : au demarrage, `SuppressionSecretairesMigration` supprime les comptes
 secretaires existants et la table `secretaires`.
+
+## Nouvelles fonctionnalites
+
+| Fonctionnalite | Endpoints | Qui |
+|---|---|---|
+| Validation des adhesions medecin -> etablissement | `GET /api/demandes-integration/en-attente`, `PATCH /api/demandes-integration/{id}/repondre` | Directeur (ses etablissements), Admin (tous) |
+| Calendrier de disponibilite | `GET /api/disponibilites/medecins/{id}`, `GET .../creneaux?du=&au=`, `PUT /api/disponibilites/moi`, `POST/DELETE /api/disponibilites/moi/absences` | Lecture : tout connecte ; ecriture : le medecin |
+| Documents medicaux (antecedents, anciens carnets scannes) | `POST/GET /api/documents-medicaux/patients/{patientId}`, `GET /api/documents-medicaux/{id}/pages/{n}`, `DELETE /api/documents-medicaux/{id}` | Le patient ; medecin autorise a ecrire ; lecture selon les regles du carnet |
+| Teleconsultation video (WebRTC) | `GET /api/teleconsultations/{rdvId}` + STOMP `/app/teleconsultation/{rdvId}/signal` -> `/user/queue/teleconsultation` | Le medecin et le patient du rendez-vous |
+
+- Un rendez-vous n'est accepte que sur un creneau du calendrier du medecin. Sans semaine definie,
+  heures ouvrables par defaut : lundi-vendredi 08:00-12:00 / 14:00-17:00, creneaux de 30 min.
+- Les documents sont stockes dans `private-uploads/documents-medicaux` (non expose publiquement), 10 Mo max par fichier, 20 fichiers max par document.
+- La salle de teleconsultation ouvre 15 min avant le rendez-vous et ferme 2 h apres
+  (`TELECONSULTATION_OUVERTURE_MINUTES`, `TELECONSULTATION_DUREE_MAX_MINUTES`). La video circule en pair-a-pair :
+  la camera exige HTTPS (ou localhost), et un serveur TURN est recommande en production
+  (cote frontend : `VITE_ICE_SERVERS='[{"urls":"turn:...","username":"...","credential":"..."}]'`).
+
+### Infirmieres et navigation integree
+
+| Fonctionnalite | Endpoints | Qui |
+|---|---|---|
+| Photo de profil obligatoire (inscription multipart, ou ajout depuis le profil) | `PUT /api/infirmiers/moi/photo` | L'infirmiere ; sans photo elle ne peut pas accepter d'alerte |
+| Profil et photo presentes au patient | `GET /api/infirmiers/{id}/profil`, `GET /api/infirmiers/{id}/photo` | L'infirmiere, l'admin, les directeurs, et les patients qu'elle a pris en charge |
+| Adhesion d'une infirmiere a un etablissement | `POST /api/infirmiers/moi/demander-integration/{etablissementId}`, `GET /api/infirmiers/moi/demandes-integration` ; validation via `/api/demandes-integration/...` | L'infirmiere demande ; le directeur de l'etablissement (ou l'admin) valide |
+| Infirmieres d'un etablissement | `GET /api/etablissements/{id}/infirmiers` | Directeur de l'etablissement, admin |
+
+- Au demarrage, `ContraintesEnumMigration` rend `demandes_integration.medecin_id` facultatif et retire la
+  contrainte CHECK obsolete sur `initiateur` (nouvelle valeur `INFIRMIER`).
+- Navigation de l'infirmiere vers le patient : entierement dans l'application (carte, trace, consignes
+  vocales en francais), sans redirection vers Google Maps. Le calcul d'itineraire utilise par defaut le serveur
+  OSRM public de demonstration ; en production, heberger une instance OSRM et la configurer cote frontend :
+  `VITE_ROUTAGE_URL=https://osrm.mondomaine.cm`. Les fonds de carte sont configurables avec `VITE_TUILES_URL`.
+
+## Securite et configuration (production)
+
+Le serveur **refuse de demarrer hors developpement** si l'une de ces variables manque ou est faible :
+
+| Variable | Contenu | Generer |
+|---|---|---|
+| `JWT_SECRET` | cle HS256, 256 bits min., Base64 | `openssl rand -base64 48` |
+| `CLE_CHIFFREMENT` | cle AES-256 (32 octets, Base64) des donnees de sante | `openssl rand -base64 32` |
+| `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` | compte admin cree au 1er demarrage (12 caracteres min.) | |
+| `CORS_ORIGINES` | URL du frontend, separees par des virgules (sans `*`) | |
+
+- **`CLE_CHIFFREMENT` doit etre sauvegardee en lieu sur** : sans elle, les champs medicaux chiffres
+  (allergies, antecedents, diagnostics, comptes rendus, ordonnances...) et les fichiers prives (photos,
+  documents scannes) deviennent illisibles. Ne jamais la changer sans re-chiffrer les donnees.
+- `mvn spring-boot:run` active le profil `dev` (valeurs de developpement publiques, `application-dev.yml`).
+  Le jar / l'image Docker n'active aucun profil : copier `.env.example` en `.env` pour docker-compose.
+- Au demarrage, `MigrationChiffrement` chiffre les donnees enregistrees avant l'activation du chiffrement (idempotent).
+- Connexion bloquee 15 min apres 5 echecs (par email) ou 20 (par adresse IP). Mot de passe oublie : code a 6 chiffres
+  par SMS (`/api/auth/mot-de-passe-oublie`, `/api/auth/reinitialiser-mot-de-passe`). Sans fournisseur SMS configure,
+  le code n'est visible que dans les journaux du profil dev.
+
+## Rendez-vous, notifications et tableau de bord
+
+- Cycle : demande du patient (`EN_ATTENTE`) -> le medecin **accepte**, **refuse** (motif) ou **reporte** sur un creneau libre
+  (`/api/rendez-vous/{id}/accepter|refuser|reporter`) -> `TERMINE` / `NO_SHOW`. Le patient est prevenu a chaque etape.
+- Notifications : toujours dans l'application (`/api/notifications`, temps reel sur `/user/queue/notifications`),
+  plus push si l'appareil est abonne et SMS pour les evenements importants.
+- Rappels automatiques des rendez-vous confirmes : la veille et une heure avant (`RappelsRendezVousPlanificateur`).
+- Avis patients sur les medecins apres un rendez-vous effectue (`POST /api/rendez-vous/{id}/avis`), moderation admin.
+- Fin de teleconsultation : compte rendu + ordonnance en une action (`POST /api/teleconsultations/{id}/cloture`).
+- Etablissements geolocalises (`latitude` / `longitude`) pour la carte dans l'application.
+- Statistiques des 30 derniers jours : `GET /api/dashboard/statistiques` (directeur : ses etablissements ; admin : tout).

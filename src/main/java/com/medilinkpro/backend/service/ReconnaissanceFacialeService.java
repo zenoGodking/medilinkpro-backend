@@ -65,8 +65,8 @@ public class ReconnaissanceFacialeService {
     private static final Set<Role> ROLES_PERSONNEL_SANTE = Set.of(Role.MEDECIN, Role.INFIRMIER);
 
     private static final String AVERTISSEMENT =
-            "Correspondance probable uniquement : la reconnaissance faciale n'est pas fiable a 100 %. "
-            + "Comparez la photo de reference avec la personne avant d'utiliser ces informations "
+            "Correspondance probable uniquement : la reconnaissance faciale n'est pas fiable à 100 %. "
+            + "Comparez la photo de référence avec la personne avant d'utiliser ces informations "
             + "et confirmez le groupe sanguin par un test avant toute transfusion.";
 
     private final PatientRepository patientRepository;
@@ -138,8 +138,8 @@ public class ReconnaissanceFacialeService {
                 .candidats(candidats)
                 .ambigu(ambigu)
                 .avertissement(candidats.isEmpty()
-                        ? "Aucune correspondance plausible. La personne n'est peut-etre pas inscrite, "
-                          + "ou la photo est de trop mauvaise qualite (visage de face, bien eclaire)."
+                        ? "Aucune correspondance plausible. La personne n'est peut-être pas inscrite, "
+                          + "ou la photo est de trop mauvaise qualité (visage de face, bien éclairé)."
                         : AVERTISSEMENT)
                 .build();
     }
@@ -148,10 +148,10 @@ public class ReconnaissanceFacialeService {
     @Transactional
     public CarnetUrgenceResponse carnetComplet(UUID patientId, Utilisateur demandeur) {
         if (!estPersonnelSanteValide(demandeur)) {
-            throw new AccessDeniedException("Carnet complet reserve au personnel de sante valide");
+            throw new AccessDeniedException("Carnet complet réservé au personnel de santé validé");
         }
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouve avec l'id : " + patientId));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'id : " + patientId));
 
         journaliser(demandeur, AccesUrgenceLog.TypeAcces.CARNET_COMPLET, patientId, null, null);
         journalAccesService.enregistrer(patientId, demandeur, TypeAccesCarnet.CARNET_URGENCE);

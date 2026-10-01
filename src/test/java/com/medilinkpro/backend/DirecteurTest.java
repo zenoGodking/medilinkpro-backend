@@ -130,7 +130,7 @@ class DirecteurTest {
         // Le patient prend rendez-vous avec ce medecin (sans preciser d'etablissement)
         appeler(post("/api/rendez-vous").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(Map.of(
                 "patientId", patient.getId(), "medecinId", medecin.getId(),
-                "dateHeure", LocalDateTime.now().plusDays(2).withNano(0).toString()))), patient)
+                "dateHeure", java.time.LocalDate.now().plusWeeks(1).with(java.time.temporal.TemporalAdjusters.nextOrSame(java.time.DayOfWeek.MONDAY)).atTime(9, 0).toString()))), patient)
                 .andExpect(status().isCreated());
 
         JsonNode patientsA = json(appeler(get("/api/directeur/patients"), dirA).andExpect(status().isOk()));

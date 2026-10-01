@@ -32,8 +32,12 @@ services:
       DB_NAME: medilinkpro
       DB_USERNAME: medilinkpro_user
       DB_PASSWORD: medilinkpro_pass
-      JWT_SECRET: NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4
+      # Secrets lus depuis le fichier .env (non versionne, voir .env.example)
+      JWT_SECRET: ${JWT_SECRET:?Definissez JWT_SECRET dans .env}
       JWT_EXPIRATION_MS: 86400000
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:?Definissez SUPER_ADMIN_EMAIL dans .env}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD:?Definissez SUPER_ADMIN_PASSWORD dans .env}
+      CORS_ORIGINES: ${CORS_ORIGINES:?Definissez CORS_ORIGINES dans .env}
       UPLOAD_DIR: /app/uploads
       PRIVATE_UPLOAD_DIR: /app/private-uploads
     ports:

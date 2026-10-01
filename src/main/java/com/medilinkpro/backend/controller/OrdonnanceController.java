@@ -59,7 +59,7 @@ public class OrdonnanceController {
             @Valid @RequestBody OrdonnanceRequest request, @AuthenticationPrincipal Utilisateur utilisateur) {
         ConsultationResponse consultation = consultationService.findById(request.getConsultationId());
         if (!utilisateur.getId().equals(consultation.getMedecinId())) {
-            throw new AccessDeniedException("Seul le medecin de la consultation peut emettre l'ordonnance");
+            throw new AccessDeniedException("Seul le médecin de la consultation peut émettre l'ordonnance");
         }
         carnetAccesService.verifierEcriture(utilisateur, consultation.getPatientId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ordonnanceService.create(request));

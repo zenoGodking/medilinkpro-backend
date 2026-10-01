@@ -20,10 +20,24 @@ public class DemandeIntegrationResponse {
 
     private UUID id;
 
+    /** MEDECIN ou INFIRMIER : le professionnel concerne par la demande. */
+    private String typeProfessionnel;
+    private UUID professionnelId;
+    private String professionnelNom;
+    private String professionnelPrenom;
+    private String professionnelEmail;
+    private String professionnelTelephone;
+
+    private UUID infirmierId;
+    private boolean infirmierPhotoDisponible;
+
     private UUID medecinId;
     private String medecinNom;
     private String medecinPrenom;
     private String medecinSpecialite;
+    private String medecinNumeroOrdre;
+    private String medecinEmail;
+    private String medecinTelephone;
 
     private UUID etablissementId;
     private String etablissementNom;

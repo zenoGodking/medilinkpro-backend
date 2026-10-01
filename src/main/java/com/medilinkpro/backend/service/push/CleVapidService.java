@@ -83,10 +83,10 @@ public class CleVapidService {
             String priv = b64.encodeToString(Utils.encode((ECPrivateKey) paire.getPrivate()));
             parametreRepository.save(new ParametreSysteme(CLE_PUBLIQUE, pub));
             parametreRepository.save(new ParametreSysteme(CLE_PRIVEE, priv));
-            log.info("Cles VAPID generees et enregistrees (notifications push)");
+            log.info("Clés VAPID générées et enregistrées (notifications push)");
             return new String[]{pub, priv};
         } catch (Exception e) {
-            throw new IllegalStateException("Impossible de generer les cles VAPID", e);
+            throw new IllegalStateException("Impossible de générer les clés VAPID", e);
         }
     }
 }

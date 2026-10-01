@@ -31,7 +31,7 @@ public class CampagneService {
     @Transactional
     public CampagneResponse creer(UUID etablissementId, CampagneRequest request) {
         EtablissementSante etablissement = etablissementRepository.findById(etablissementId)
-                .orElseThrow(() -> new ResourceNotFoundException("Etablissement non trouve avec l'id : " + etablissementId));
+                .orElseThrow(() -> new ResourceNotFoundException("Établissement non trouvé avec l'id : " + etablissementId));
 
         Campagne campagne = Campagne.builder()
                 .etablissement(etablissement)
@@ -84,7 +84,7 @@ public class CampagneService {
 
     private Campagne getOrThrow(UUID id) {
         return campagneRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Campagne non trouvee avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Campagne non trouvée avec l'id : " + id));
     }
 
     private CampagneResponse toResponse(Campagne c) {

@@ -54,7 +54,7 @@ public class CarteUrgenceService {
     @Transactional(readOnly = true)
     public CarteUrgenceResponse consulter(String jeton, Utilisateur lecteur) {
         Patient p = patientRepository.findByJetonCarteUrgence(jeton)
-                .orElseThrow(() -> new ResourceNotFoundException("Carte d'urgence inconnue ou remplacee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Carte d'urgence inconnue ou remplacée"));
         journalAccesService.enregistrer(p.getId(), lecteur, TypeAccesCarnet.CARTE_URGENCE);
 
         CarteUrgenceResponse.CarteUrgenceResponseBuilder carte = CarteUrgenceResponse.builder()
@@ -74,7 +74,7 @@ public class CarteUrgenceService {
 
     private Patient patientConnecte(Utilisateur u) {
         if (u.getRole() != Role.PATIENT) {
-            throw new AccessDeniedException("Reserve au patient");
+            throw new AccessDeniedException("Réservé au patient");
         }
         return patientRepository.findById(u.getId()).orElseThrow();
     }

@@ -1,5 +1,7 @@
 package com.medilinkpro.backend.entity;
 
+import com.medilinkpro.backend.securite.TexteChiffreConverter;
+import jakarta.persistence.Convert;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,8 +49,12 @@ public class Ordonnance {
     @Column(name = "date_emission", nullable = false, updatable = false)
     private LocalDateTime dateEmission;
 
+    @Convert(converter = TexteChiffreConverter.class)
+
     @Column(name = "medicaments", columnDefinition = "TEXT")
     private String medicaments;
+
+    @Convert(converter = TexteChiffreConverter.class)
 
     @Column(name = "posologie", columnDefinition = "TEXT")
     private String posologie;

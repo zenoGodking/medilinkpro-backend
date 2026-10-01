@@ -29,4 +29,7 @@ public class MedecinResponse {
     private boolean verifie;
     private UUID etablissementId;
     private String etablissementNom;
+    /** Moyenne des avis patients (null sans avis). */
+    private Double noteMoyenne;
+    private long nombreAvis;
 }

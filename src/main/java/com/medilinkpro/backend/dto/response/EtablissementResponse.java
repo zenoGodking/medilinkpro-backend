@@ -23,6 +23,8 @@ public class EtablissementResponse {
     private String ville;
     private String quartier;
     private String telephone;
+    private Double latitude;
+    private Double longitude;
     private List<String> specialitesDisponibles;
     private List<String> photos;
     private long nombreVisites;

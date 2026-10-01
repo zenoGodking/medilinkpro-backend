@@ -15,4 +15,15 @@ public interface DemandeIntegrationRepository extends JpaRepository<DemandeInteg
 
     boolean existsByMedecinIdAndEtablissementIdAndStatut(
             UUID medecinId, UUID etablissementId, StatutDemandeIntegration statut);
+
+    List<DemandeIntegration> findByInfirmierIdOrderByDateCreationDesc(UUID infirmierId);
+
+    boolean existsByInfirmierIdAndEtablissementIdAndStatut(
+            UUID infirmierId, UUID etablissementId, StatutDemandeIntegration statut);
+
+    List<DemandeIntegration> findByStatutOrderByDateCreationDesc(StatutDemandeIntegration statut);
+
+    /** Demandes concernant les etablissements dont ce directeur est responsable. */
+    List<DemandeIntegration> findByEtablissement_Directeur_IdAndStatutOrderByDateCreationDesc(
+            UUID directeurId, StatutDemandeIntegration statut);
 }

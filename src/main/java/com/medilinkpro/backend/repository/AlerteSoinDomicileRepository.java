@@ -116,4 +116,10 @@ public interface AlerteSoinDomicileRepository extends JpaRepository<AlerteSoinDo
     Double moyenneNoteInfirmier(@Param("infirmierId") UUID infirmierId);
 
     long countByInfirmierIdAndNoteIsNotNull(UUID infirmierId);
+
+    boolean existsByPatientIdAndInfirmierId(UUID patientId, UUID infirmierId);
+
+    List<AlerteSoinDomicile> findByDateCreationAfter(java.time.LocalDateTime depuis);
+
+    long countByInfirmierIdAndStatutIn(UUID infirmierId, java.util.Collection<StatutAlerte> statuts);
 }

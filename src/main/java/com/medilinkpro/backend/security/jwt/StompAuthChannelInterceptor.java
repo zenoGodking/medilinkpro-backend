@@ -48,7 +48,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (!jwtService.isTokenValid(token, userDetails)) {
-                throw new IllegalArgumentException("Token d'authentification invalide ou expire");
+                throw new IllegalArgumentException("Token d'authentification invalide ou expiré");
             }
 
             Principal principal = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -65,7 +65,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
                         && u.getRole() == Role.INFIRMIER;
 
                 if (!estInfirmier) {
-                    throw new IllegalArgumentException("Abonnement reserve aux infirmieres");
+                    throw new IllegalArgumentException("Abonnement réservé aux infirmières");
                 }
             }
         }

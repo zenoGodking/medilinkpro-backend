@@ -15,16 +15,17 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Demande d'integration d'un medecin dans un etablissement de sante : soit
- * l'etablissement invite le medecin (celui-ci doit valider), soit le medecin
- * demande a rejoindre l'etablissement (le Directeur/Admin doit valider).
- * Une fois acceptee, Medecin.etablissement est mis a jour.
+ * Demande d'integration d'un professionnel dans un etablissement de sante : soit
+ * l'etablissement invite un medecin (celui-ci doit valider), soit un medecin ou une
+ * infirmiere demande a rejoindre l'etablissement (le Directeur/Admin doit valider).
+ * Exactement un des deux champs medecin / infirmier est renseigne.
+ * Une fois acceptee, Medecin.etablissement ou Infirmier.etablissement est mis a jour.
  */
 @Entity
 @Table(name = "demandes_integration")
 @Getter
 @Setter
-@ToString(exclude = {"medecin", "etablissement"})
+@ToString(exclude = {"medecin", "infirmier", "etablissement"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,8 +37,12 @@ public class DemandeIntegration {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medecin_id", nullable = false)
+    @JoinColumn(name = "medecin_id")
     private Medecin medecin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "infirmier_id")
+    private Infirmier infirmier;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "etablissement_id", nullable = false)

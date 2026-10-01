@@ -32,6 +32,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
+    @ExceptionHandler(TropDeTentativesException.class)
+    public ResponseEntity<ErrorResponse> handleTropDeTentatives(TropDeTentativesException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request, null);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.UNAUTHORIZED, "Email ou mot de passe incorrect", request, null);
@@ -39,7 +44,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
     public ResponseEntity<ErrorResponse> handleDisabled(org.springframework.security.authentication.DisabledException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Ce compte est desactive", request, null);
+        return buildResponse(HttpStatus.FORBIDDEN, "Ce compte est désactivé", request, null);
     }
 
     @ExceptionHandler(com.medilinkpro.backend.exception.CompteNonValideException.class)
@@ -54,7 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Acces refuse : permissions insuffisantes", request, null);
+        return buildResponse(HttpStatus.FORBIDDEN, "Accès refusé : permissions insuffisantes", request, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -63,12 +68,12 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return buildResponse(HttpStatus.BAD_REQUEST, "Erreur de validation des donnees", request, errors);
+        return buildResponse(HttpStatus.BAD_REQUEST, "Erreur de validation des données", request, errors);
     }
 
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleUnreadable(org.springframework.http.converter.HttpMessageNotReadableException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Requete invalide : corps illisible ou valeur non reconnue", request, null);
+        return buildResponse(HttpStatus.BAD_REQUEST, "Requête invalide : corps illisible ou valeur non reconnue", request, null);
     }
 
     @ExceptionHandler(Exception.class)

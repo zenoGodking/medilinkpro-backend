@@ -31,5 +31,9 @@ public class RendezVousResponse {
     private TypeConsultation type;
     private boolean rappelEnvoye;
     private String codeConfirmation;
+    private String motifMedecin;
+    private LocalDateTime dateHeureInitiale;
+    /** Le patient a deja laisse un avis sur ce rendez-vous. */
+    private boolean avisDonne;
     private LocalDateTime creeLe;
 }

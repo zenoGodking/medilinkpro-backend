@@ -1,5 +1,7 @@
 package com.medilinkpro.backend.entity.suivi;
 
+import com.medilinkpro.backend.securite.TexteChiffreConverter;
+import jakarta.persistence.Convert;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,6 +44,8 @@ public class VisitePrenatale {
 
     @Column(name = "hauteur_uterine_cm")
     private Double hauteurUterineCm;
+
+    @Convert(converter = TexteChiffreConverter.class)
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;

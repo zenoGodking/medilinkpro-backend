@@ -1,5 +1,7 @@
 package com.medilinkpro.backend.entity;
 
+import com.medilinkpro.backend.securite.TexteChiffreConverter;
+import jakarta.persistence.Convert;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.medilinkpro.backend.enums.TypeConsultation;
 import jakarta.persistence.*;
@@ -55,8 +57,12 @@ public class Consultation {
     @Column(name = "motif", length = 255)
     private String motif;
 
+    @Convert(converter = TexteChiffreConverter.class)
+
     @Column(name = "diagnostic", columnDefinition = "TEXT")
     private String diagnostic;
+
+    @Convert(converter = TexteChiffreConverter.class)
 
     @Column(name = "compte_rendu", columnDefinition = "TEXT")
     private String compteRendu;

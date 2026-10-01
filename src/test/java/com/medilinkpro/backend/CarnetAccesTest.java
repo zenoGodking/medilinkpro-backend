@@ -35,6 +35,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -133,14 +134,18 @@ class CarnetAccesTest {
     @Test
     void unRendezVousPrisParLePatientFaitDuMedecinSonMedecinTraitant() throws Exception {
         Map<String, Object> rdv = Map.of("patientId", aline.getId(), "medecinId", drEtoa.getId(),
-                "dateHeure", LocalDateTime.now().plusDays(3).withNano(0).toString());
+                "dateHeure", java.time.LocalDate.now().plusWeeks(1).with(java.time.temporal.TemporalAdjusters.nextOrSame(java.time.DayOfWeek.MONDAY)).atTime(9, 0).toString());
 
         // Un medecin ne peut pas s'attribuer un patient en prenant rendez-vous a sa place
         appeler(post("/api/rendez-vous").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(rdv)), drEtoa).andExpect(status().isForbidden());
 
-        appeler(post("/api/rendez-vous").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(rdv)), aline).andExpect(status().isCreated());
+        String rdvId = json(appeler(post("/api/rendez-vous").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(rdv)), aline).andExpect(status().isCreated())).get("id").asText();
+        // Simple demande : le medecin n'a pas encore de droit d'ecriture
+        assertThat(json(appeler(get("/api/carnets/" + aline.getId()), drEtoa)).get("ecritureAutorisee").asBoolean()).isFalse();
+        appeler(patch("/api/rendez-vous/" + rdvId + "/accepter"), drKamga).andExpect(status().isForbidden());
+        appeler(patch("/api/rendez-vous/" + rdvId + "/accepter"), drEtoa).andExpect(status().isOk());
         assertThat(json(appeler(get("/api/carnets/" + aline.getId()), drEtoa)).get("motifEcriture").asText())
                 .isEqualTo("ANCIEN_PATIENT");
         creerConsultation(drEtoa, aline).andExpect(status().isCreated());

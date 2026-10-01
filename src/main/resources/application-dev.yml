@@ -1,0 +1,18 @@
+# Profil de developpement local : active automatiquement par `mvn spring-boot:run` (voir pom.xml).
+# NE JAMAIS utiliser en production : ces valeurs sont publiques (versionnees).
+medilinkpro:
+  super-admin:
+    email: ${SUPER_ADMIN_EMAIL:womeloic@gmail.com}
+    mot-de-passe: ${SUPER_ADMIN_PASSWORD:Hope123}
+  jwt:
+    secret: ${JWT_SECRET:NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4}
+  chiffrement:
+    # Cle de developpement publique : ne protege rien, uniquement pour le poste local.
+    cle: ${CLE_CHIFFREMENT:ZGV2LWNsZS1tZWRpbGlua3Byby0zMi1vY3RldHMhISE=}
+  cors:
+    # Vite en local, et les appareils du reseau local (test sur telephone)
+    origines: ${CORS_ORIGINES:http://localhost:*,http://127.0.0.1:*,http://192.168.*.*:*,https://192.168.*.*:*}
+
+logging:
+  level:
+    com.medilinkpro.backend: DEBUG

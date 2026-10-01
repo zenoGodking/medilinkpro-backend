@@ -15,6 +15,8 @@ public interface MedecinRepository extends JpaRepository<Medecin, UUID> {
 
     List<Medecin> findBySpecialiteIgnoreCaseContaining(String specialite);
 
+    List<Medecin> findByEtablissement_Directeur_Id(UUID directeurId);
+
     /**
      * Recherche de medecins par specialite, ville et/ou quartier (filtres optionnels,
      * combinables). Les medecins de la meme ville/quartier remontent en priorite.

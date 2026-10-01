@@ -73,7 +73,7 @@ public class PatientController {
 
     @PostMapping("/{id}/deces")
     @Operation(summary = "Declarer le deces d'un patient (tout medecin valide)",
-            description = "Desactive le compte, annule les alertes en attente et informe le proche par SMS.")
+            description = "Désactive le compte, annule les alertes en attente et informe le proche par SMS.")
     public ResponseEntity<DecesResponse> declarerDeces(
             @PathVariable UUID id, @Valid @RequestBody DeclarationDecesRequest request,
             @AuthenticationPrincipal Utilisateur utilisateur) {

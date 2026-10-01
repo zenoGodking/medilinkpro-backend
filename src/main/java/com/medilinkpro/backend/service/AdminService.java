@@ -2,6 +2,7 @@ package com.medilinkpro.backend.service;
 
 import com.medilinkpro.backend.dto.request.ValiderCompteRequest;
 import com.medilinkpro.backend.dto.response.CompteEnAttenteResponse;
+import com.medilinkpro.backend.entity.Infirmier;
 import com.medilinkpro.backend.entity.Medecin;
 import com.medilinkpro.backend.entity.Utilisateur;
 import com.medilinkpro.backend.enums.Role;
@@ -102,14 +103,14 @@ public class AdminService {
             utilisateurRepository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException(
-                    "Impossible de supprimer ce compte : il possede des donnees liees (consultations, "
-                            + "rendez-vous, ordonnances, alertes...). Desactivez-le plutot pour preserver l'historique medical.");
+                    "Impossible de supprimer ce compte : il possède des données liées (consultations, "
+                            + "rendez-vous, ordonnances, alertes...). Désactivez-le plutôt pour préserver l'historique médical.");
         }
     }
 
     private Utilisateur getOrThrow(UUID id) {
         return utilisateurRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouve avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id : " + id));
     }
 
     private CompteEnAttenteResponse toResponse(Utilisateur u) {
@@ -127,6 +128,9 @@ public class AdminService {
 
         if (u instanceof Medecin medecin) {
             builder.specialite(medecin.getSpecialite()).numeroOrdre(medecin.getNumeroOrdre());
+        }
+        if (u instanceof Infirmier infirmier) {
+            builder.photoDisponible(infirmier.getPhotoProfilChemin() != null);
         }
 
         return builder.build();

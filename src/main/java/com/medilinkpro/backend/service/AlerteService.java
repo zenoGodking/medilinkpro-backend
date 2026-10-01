@@ -71,7 +71,7 @@ public class AlerteService {
     @Transactional
     public AlerteResponse creerAlerte(UUID patientId, AlerteRequest request) {
         Patient patient = (Patient) utilisateurRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouve"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé"));
 
         AlerteSoinDomicile alerte = AlerteSoinDomicile.builder()
                 .patient(patient)
@@ -124,8 +124,8 @@ public class AlerteService {
             pourElle.setDistanceKm(arrondi(p.distanceKm()));
             messagingTemplate.convertAndSendToUser(p.infirmier().getEmail(), QUEUE_ALERTES, pourElle);
             // Push : l'infirmiere est prevenue meme application fermee ou ecran eteint.
-            notificationPushService.envoyer(p.infirmier().getId(), "Demande de soins a domicile",
-                    "A " + String.format(java.util.Locale.FRANCE, "%.1f", p.distanceKm()) + " km : " + alerte.getAdresse(),
+            notificationPushService.envoyer(p.infirmier().getId(), "Demande de soins à domicile",
+                    "À " + String.format(java.util.Locale.FRANCE, "%.1f", p.distanceKm()) + " km : " + alerte.getAdresse(),
                     "/infirmier", "alerte-" + alerte.getId());
         }));
         apresCommit(() -> messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, base));
@@ -138,8 +138,8 @@ public class AlerteService {
         apresCommit(() -> {
             messagingTemplate.convertAndSend(TOPIC_ALERTES, response);
             messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
-            notificationPushService.envoyerAuRole(com.medilinkpro.backend.enums.Role.INFIRMIER, "Demande de soins a domicile",
-                    "Aucune infirmiere proche disponible : " + alerte.getAdresse(), "/infirmier", "alerte-" + alerte.getId());
+            notificationPushService.envoyerAuRole(com.medilinkpro.backend.enums.Role.INFIRMIER, "Demande de soins à domicile",
+                    "Aucune infirmière proche disponible : " + alerte.getAdresse(), "/infirmier", "alerte-" + alerte.getId());
         });
     }
 
@@ -172,7 +172,7 @@ public class AlerteService {
     @Transactional
     public void mettreAJourPosition(UUID infirmierId, PositionRequest position) {
         Infirmier infirmier = infirmierRepository.findById(infirmierId)
-                .orElseThrow(() -> new AccessDeniedException("Seule une infirmiere peut partager sa position"));
+                .orElseThrow(() -> new AccessDeniedException("Seule une infirmière peut partager sa position"));
         infirmier.setLatitude(position.getLatitude());
         infirmier.setLongitude(position.getLongitude());
         infirmier.setDatePosition(LocalDateTime.now());
@@ -188,9 +188,9 @@ public class AlerteService {
     @Transactional(readOnly = true)
     public SuiviInfirmierResponse suivi(UUID alerteId, UUID patientId) {
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         if (!alerte.getPatient().getId().equals(patientId)) {
-            throw new AccessDeniedException("Cette alerte n'appartient pas a ce patient");
+            throw new AccessDeniedException("Cette alerte n'appartient pas à ce patient");
         }
         if (alerte.getStatut() != StatutAlerte.REPONDUE || alerte.getInfirmier() == null) {
             throw new BadRequestException("Le suivi n'est disponible que pendant l'intervention");
@@ -239,37 +239,41 @@ public class AlerteService {
     @Transactional
     public AlerteResponse repondre(UUID alerteId, UUID infirmierId) {
         Infirmier infirmier = (Infirmier) utilisateurRepository.findById(infirmierId)
-                .orElseThrow(() -> new ResourceNotFoundException("Infirmier non trouve"));
+                .orElseThrow(() -> new ResourceNotFoundException("Infirmier non trouvé"));
+        if (infirmier.getPhotoProfilChemin() == null) {
+            throw new BadRequestException(
+                    "Ajoutez une photo de profil avant de répondre à une alerte : le patient doit savoir qui va venir chez lui.");
+        }
 
         // Une infirmiere ne peut gerer qu'une seule intervention a la fois : elle doit
         // d'abord soumettre son compte-rendu avant de pouvoir repondre a une nouvelle alerte.
         boolean dejaOccupee = alerteRepository.existsByInfirmierIdAndStatut(infirmierId, StatutAlerte.REPONDUE);
         if (dejaOccupee) {
             throw new ConflictException(
-                    "Vous avez deja une intervention en cours. Soumettez votre compte-rendu avant de repondre a une nouvelle alerte.");
+                    "Vous avez déjà une intervention en cours. Soumettez votre compte-rendu avant de répondre à une nouvelle alerte.");
         }
 
         AlerteSoinDomicile cible = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         if (!cible.isDiffusionGenerale() && !cible.getInfirmiersNotifies().contains(infirmierId)) {
-            throw new ConflictException("Cette alerte a ete proposee a des infirmieres plus proches du patient");
+            throw new ConflictException("Cette alerte a été proposée à des infirmières plus proches du patient");
         }
 
         int lignesAffectees = alerteRepository.repondreSiDisponible(alerteId, infirmier, LocalDateTime.now());
         if (lignesAffectees == 0) {
-            throw new ConflictException("Cette alerte a deja ete prise en charge par une autre infirmiere (ou annulee)");
+            throw new ConflictException("Cette alerte a déjà été prise en charge par une autre infirmière (ou annulée)");
         }
 
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         AlerteResponse response = toResponse(alerte);
 
         // Informe les autres infirmieres que l'alerte n'est plus disponible, et le
         // patient qu'une infirmiere a repondu ("alerte repondue").
         notifierInfirmieres(alerte, response);
         messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
-        notificationPushService.envoyer(alerte.getPatient().getId(), "Une infirmiere arrive",
-                infirmier.getPrenom() + " " + infirmier.getNom() + " a accepte votre demande. Suivez son trajet en direct.",
+        notificationPushService.envoyer(alerte.getPatient().getId(), "Une infirmière arrive",
+                infirmier.getPrenom() + " " + infirmier.getNom() + " a accepté votre demande. Suivez son trajet en direct.",
                 "/patient/alertes", "alerte-" + alerte.getId());
 
         return response;
@@ -278,13 +282,13 @@ public class AlerteService {
     @Transactional
     public AlerteResponse annuler(UUID alerteId, UUID patientId) {
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
 
         if (!alerte.getPatient().getId().equals(patientId)) {
-            throw new BadRequestException("Cette alerte n'appartient pas a ce patient");
+            throw new BadRequestException("Cette alerte n'appartient pas à ce patient");
         }
         if (alerte.getStatut() != StatutAlerte.EN_ATTENTE) {
-            throw new BadRequestException("Cette alerte ne peut plus etre annulee");
+            throw new BadRequestException("Cette alerte ne peut plus être annulée");
         }
 
         alerte.setStatut(StatutAlerte.ANNULEE);
@@ -305,11 +309,11 @@ public class AlerteService {
     public AlerteResponse retracter(UUID alerteId, UUID infirmierId) {
         int lignesAffectees = alerteRepository.retracterSiResponsable(alerteId, infirmierId);
         if (lignesAffectees == 0) {
-            throw new ConflictException("Vous n'etes plus responsable de cette alerte (deja terminee, annulee ou retractee)");
+            throw new ConflictException("Vous n'êtes plus responsable de cette alerte (déjà terminée, annulée ou rétractée)");
         }
 
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         AlerteResponse response = toResponse(alerte);
 
         // L'alerte redevient visible pour les infirmieres deja notifiees (l'elargissement
@@ -330,11 +334,11 @@ public class AlerteService {
         int lignesAffectees = alerteRepository.soumettreCompteRenduSiResponsable(
                 alerteId, infirmierId, request.getCompteRendu(), LocalDateTime.now());
         if (lignesAffectees == 0) {
-            throw new ConflictException("Impossible de soumettre ce compte-rendu (intervention deja cloturee ou non responsable)");
+            throw new ConflictException("Impossible de soumettre ce compte-rendu (intervention déjà clôturée ou non responsable)");
         }
 
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         AlerteResponse response = toResponse(alerte);
 
         // Le patient est informe que le compte-rendu est disponible et qu'il peut noter
@@ -342,8 +346,8 @@ public class AlerteService {
         // reflete l'etat de cette alerte.
         messagingTemplate.convertAndSendToUser(alerte.getPatient().getEmail(), QUEUE_ALERTES, response);
         notifierInfirmieres(alerte, response);
-        notificationPushService.envoyer(alerte.getPatient().getId(), "Soin termine",
-                "Le compte-rendu de votre infirmiere est disponible. Vous pouvez noter l'intervention.",
+        notificationPushService.envoyer(alerte.getPatient().getId(), "Soin terminé",
+                "Le compte-rendu de votre infirmière est disponible. Vous pouvez noter l'intervention.",
                 "/patient/alertes", "alerte-" + alerte.getId());
 
         return response;
@@ -355,11 +359,11 @@ public class AlerteService {
         int lignesAffectees = alerteRepository.noterSiEligible(
                 alerteId, patientId, request.getNote(), request.getCommentaire(), LocalDateTime.now());
         if (lignesAffectees == 0) {
-            throw new BadRequestException("Cette alerte ne peut pas etre notee dans son etat actuel");
+            throw new BadRequestException("Cette alerte ne peut pas être notée dans son état actuel");
         }
 
         AlerteSoinDomicile alerte = alerteRepository.findById(alerteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvee"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alerte non trouvée"));
         AlerteResponse response = toResponse(alerte);
 
         // Informe l'infirmiere concernee (retire l'intervention de sa liste en cours).

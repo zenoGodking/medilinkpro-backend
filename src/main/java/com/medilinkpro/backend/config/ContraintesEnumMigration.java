@@ -22,6 +22,16 @@ public class ContraintesEnumMigration implements ApplicationRunner {
     private static final String[][] CONTRAINTES_OBSOLETES = {
             {"acces_carnet", "acces_carnet_utilisateur_role_check"},
             {"mesures_sante", "mesures_sante_saisie_par_role_check"},
+            // Valeur INFIRMIER ajoutee a InitiateurDemande
+            {"demandes_integration", "demandes_integration_initiateur_check"},
+            // Valeur REFUSE ajoutee a StatutRendezVous
+            {"rendez_vous", "rendez_vous_statut_check"},
+    };
+
+    /** Colonnes devenues facultatives (ddl-auto=update ne retire jamais un NOT NULL). */
+    private static final String[][] COLONNES_DEVENUES_NULLABLES = {
+            // Une demande d'integration concerne un medecin OU une infirmiere
+            {"demandes_integration", "medecin_id"},
     };
 
     private final JdbcTemplate jdbcTemplate;
@@ -30,6 +40,9 @@ public class ContraintesEnumMigration implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         for (String[] c : CONTRAINTES_OBSOLETES) {
             jdbcTemplate.execute("ALTER TABLE " + c[0] + " DROP CONSTRAINT IF EXISTS " + c[1]);
+        }
+        for (String[] c : COLONNES_DEVENUES_NULLABLES) {
+            jdbcTemplate.execute("ALTER TABLE " + c[0] + " ALTER COLUMN " + c[1] + " DROP NOT NULL");
         }
     }
 }

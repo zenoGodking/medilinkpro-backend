@@ -18,6 +18,8 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, UUID> {
 
     List<RendezVous> findByStatut(StatutRendezVous statut);
 
+    List<RendezVous> findByDateHeureBetween(LocalDateTime debut, LocalDateTime fin);
+
     boolean existsByPatientIdAndMedecinIdAndStatutIn(UUID patientId, UUID medecinId, java.util.Collection<StatutRendezVous> statuts);
 
     @Query("""
@@ -25,9 +27,38 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, UUID> {
             FROM RendezVous r
             WHERE r.medecin.id = :medecinId
             AND r.dateHeure = :dateHeure
-            AND r.statut <> 'ANNULE'
+            AND r.statut NOT IN (com.medilinkpro.backend.enums.StatutRendezVous.ANNULE,
+                                 com.medilinkpro.backend.enums.StatutRendezVous.REFUSE)
             """)
     boolean existsCreneauOccupe(@Param("medecinId") UUID medecinId, @Param("dateHeure") LocalDateTime dateHeure);
+
+    /** Meme verification en ignorant un rendez-vous donne (celui que l'on reporte). */
+    @Query("""
+            SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END
+            FROM RendezVous r
+            WHERE r.medecin.id = :medecinId
+            AND r.dateHeure = :dateHeure
+            AND r.id <> :exclu
+            AND r.statut NOT IN (com.medilinkpro.backend.enums.StatutRendezVous.ANNULE,
+                                 com.medilinkpro.backend.enums.StatutRendezVous.REFUSE)
+            """)
+    boolean existsCreneauOccupeHors(@Param("medecinId") UUID medecinId, @Param("dateHeure") LocalDateTime dateHeure,
+                                    @Param("exclu") UUID rendezVousExclu);
+
+    /** Rendez-vous confirmes dont l'heure tombe dans l'intervalle (rappels). */
+    List<RendezVous> findByStatutAndDateHeureBetween(StatutRendezVous statut, LocalDateTime debut, LocalDateTime fin);
+
+    /** Heures deja reservees (rendez-vous non annules) d'un medecin sur un intervalle. */
+    @Query("""
+            SELECT r.dateHeure FROM RendezVous r
+            WHERE r.medecin.id = :medecinId
+            AND r.dateHeure >= :debut AND r.dateHeure < :fin
+            AND r.statut NOT IN (com.medilinkpro.backend.enums.StatutRendezVous.ANNULE,
+                                 com.medilinkpro.backend.enums.StatutRendezVous.REFUSE)
+            """)
+    List<LocalDateTime> findHeuresReservees(@Param("medecinId") UUID medecinId,
+                                            @Param("debut") LocalDateTime debut,
+                                            @Param("fin") LocalDateTime fin);
 
     /** Rendez-vous pris dans un etablissement du directeur, ou avec un medecin de cet etablissement. */
     @Query("""

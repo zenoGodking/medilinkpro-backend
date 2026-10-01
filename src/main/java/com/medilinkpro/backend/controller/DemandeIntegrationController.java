@@ -57,7 +57,7 @@ public class DemandeIntegrationController {
 
     @PatchMapping("/api/demandes-integration/{id}/repondre")
     @Operation(summary = "Accepter ou refuser une demande d'integration (medecin ou directeur de l'etablissement selon qui a initie)",
-            description = "L'auteur de la reponse est toujours l'utilisateur connecte (le parametre actorId, conserve pour compatibilite, est ignore).")
+            description = "L'auteur de la réponse est toujours l'utilisateur connecté (le paramètre actorId, conservé pour compatibilité, est ignoré).")
     public ResponseEntity<DemandeIntegrationResponse> repondre(
             @PathVariable UUID id, @RequestParam(required = false) UUID actorId,
             @Valid @RequestBody ReponseDemandeIntegrationRequest request, @AuthenticationPrincipal Utilisateur utilisateur) {
@@ -76,6 +76,12 @@ public class DemandeIntegrationController {
     public ResponseEntity<List<DemandeIntegrationResponse>> listerParEtablissement(@PathVariable UUID etablissementId, @AuthenticationPrincipal Utilisateur utilisateur) {
         etablissementAccesService.verifierGestion(utilisateur, etablissementId);
         return ResponseEntity.ok(demandeIntegrationService.listerParEtablissement(etablissementId));
+    }
+
+    @GetMapping("/api/demandes-integration/en-attente")
+    @Operation(summary = "Directeur/Admin : demandes d'adhesion en attente (directeur : ses etablissements, admin : toutes)")
+    public ResponseEntity<List<DemandeIntegrationResponse>> enAttente(@AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(demandeIntegrationService.listerEnAttente(utilisateur));
     }
 
     private static void verifierSoi(UUID medecinId, Utilisateur u) {

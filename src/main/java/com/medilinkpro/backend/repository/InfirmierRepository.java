@@ -26,4 +26,8 @@ public interface InfirmierRepository extends JpaRepository<Infirmier, UUID> {
                   WHERE a.infirmier = i AND a.statut = com.medilinkpro.backend.enums.StatutAlerte.REPONDUE)
             """)
     List<Infirmier> findDisponiblesLocalisees(@Param("depuis") LocalDateTime depuis);
+
+    List<Infirmier> findByEtablissementIdOrderByNomAsc(UUID etablissementId);
+
+    List<Infirmier> findByEtablissement_Directeur_Id(UUID directeurId);
 }

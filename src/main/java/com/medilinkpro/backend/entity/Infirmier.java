@@ -5,6 +5,9 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -42,4 +45,17 @@ public class Infirmier extends Utilisateur {
 
     @Column(name = "date_position")
     private LocalDateTime datePosition;
+
+    /**
+     * Photo de profil (dossier prive, chemin relatif) : obligatoire pour repondre aux alertes,
+     * afin que le patient sache qui va venir chez lui. Servie par InfirmierController.
+     */
+    @Column(name = "photo_profil_chemin", length = 255)
+    private String photoProfilChemin;
+
+    /** Etablissement de rattachement, apres acceptation d'une demande d'integration. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "etablissement_id")
+    @ToString.Exclude
+    private EtablissementSante etablissement;
 }

@@ -54,10 +54,10 @@ public class OrdonnanceService {
     public OrdonnanceResponse create(OrdonnanceRequest request) {
         Consultation consultation = consultationRepository.findById(request.getConsultationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Consultation non trouvee avec l'id : " + request.getConsultationId()));
+                        "Consultation non trouvée avec l'id : " + request.getConsultationId()));
 
         if (ordonnanceRepository.findByConsultationId(consultation.getId()).isPresent()) {
-            throw new BadRequestException("Une ordonnance existe deja pour cette consultation");
+            throw new BadRequestException("Une ordonnance existe déjà pour cette consultation");
         }
 
         String codeQr = "QR-" + UUID.randomUUID();
@@ -78,6 +78,6 @@ public class OrdonnanceService {
 
     private Ordonnance getOrThrow(UUID id) {
         return ordonnanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ordonnance non trouvee avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Ordonnance non trouvée avec l'id : " + id));
     }
 }

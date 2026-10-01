@@ -97,7 +97,7 @@ class NotificationPushTest {
         aline = utilisateurRepository.save(Patient.builder().nom("Mballa").prenom("Aline").email("aline@test.cm").motDePasse("x")
                 .role(Role.PATIENT).statutCompte(StatutCompte.APPROUVE).actif(true).build());
         infirmiere = utilisateurRepository.save(Infirmier.builder().nom("Ngo").prenom("Carine").email("carine@test.cm").motDePasse("x")
-                .role(Role.INFIRMIER).statutCompte(StatutCompte.APPROUVE).actif(true)
+                .role(Role.INFIRMIER).photoProfilChemin("photos-infirmiers/test.jpg").statutCompte(StatutCompte.APPROUVE).actif(true)
                 .latitude(3.857).longitude(11.5021).datePosition(LocalDateTime.now()).build());
     }
 
@@ -132,11 +132,11 @@ class NotificationPushTest {
                 Map.of("adresse", "Bastos", "latitude", 3.848, "longitude", 11.5021), aline)
                 .andExpect(status().isCreated())).get("id").asText();
         String[] pourInfirmiere = attendreEnvoi("https://push.example/infirmiere");
-        assertThat(pourInfirmiere[1]).contains("Demande de soins a domicile").contains("1,0 km").contains("Bastos");
+        assertThat(pourInfirmiere[1]).contains("Demande de soins à domicile").contains("1,0 km").contains("Bastos");
 
         appeler(patch("/api/alertes/" + alerteId + "/repondre").param("infirmierId", infirmiere.getId().toString()), infirmiere)
                 .andExpect(status().isOk());
-        assertThat(attendreEnvoi("https://push.example/aline")[1]).contains("Une infirmiere arrive").contains("Carine Ngo");
+        assertThat(attendreEnvoi("https://push.example/aline")[1]).contains("Une infirmière arrive").contains("Carine Ngo");
     }
 
     @Test

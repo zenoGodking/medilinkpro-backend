@@ -10,5 +10,7 @@ public interface MedecinMapper {
 
     @Mapping(target = "etablissementId", source = "etablissement.id")
     @Mapping(target = "etablissementNom", source = "etablissement.nom")
+    @Mapping(target = "noteMoyenne", ignore = true)
+    @Mapping(target = "nombreAvis", ignore = true)
     MedecinResponse toResponse(Medecin medecin);
 }

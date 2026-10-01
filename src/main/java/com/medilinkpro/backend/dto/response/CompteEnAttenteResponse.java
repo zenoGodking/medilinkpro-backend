@@ -37,4 +37,7 @@ public class CompteEnAttenteResponse {
     // Specifique Medecin
     private String specialite;
     private String numeroOrdre;
+
+    // Specifique Infirmier : photo de profil fournie (servie par /api/infirmiers/{id}/photo)
+    private Boolean photoDisponible;
 }

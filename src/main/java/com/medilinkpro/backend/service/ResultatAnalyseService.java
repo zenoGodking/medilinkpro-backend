@@ -39,7 +39,7 @@ public class ResultatAnalyseService {
     public ResultatAnalyseResponse create(ResultatAnalyseRequest request) {
         DossierMedical dossier = dossierMedicalRepository.findById(request.getDossierMedicalId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Dossier medical non trouve avec l'id : " + request.getDossierMedicalId()));
+                        "Dossier médical non trouvé avec l'id : " + request.getDossierMedicalId()));
 
         ResultatAnalyse resultat = ResultatAnalyse.builder()
                 .dossierMedical(dossier)
@@ -56,7 +56,7 @@ public class ResultatAnalyseService {
     @Transactional
     public void delete(UUID id) {
         ResultatAnalyse resultat = resultatAnalyseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Resultat d'analyse non trouve avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Résultat d'analyse non trouvé avec l'id : " + id));
         resultatAnalyseRepository.delete(resultat);
     }
 
@@ -64,7 +64,7 @@ public class ResultatAnalyseService {
     @Transactional(readOnly = true)
     public UUID patientIdDuDossier(UUID dossierId) {
         return dossierMedicalRepository.findById(dossierId)
-                .orElseThrow(() -> new ResourceNotFoundException("Dossier medical non trouve avec l'id : " + dossierId))
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé avec l'id : " + dossierId))
                 .getPatient().getId();
     }
 
@@ -72,7 +72,7 @@ public class ResultatAnalyseService {
     @Transactional(readOnly = true)
     public UUID patientIdDuResultat(UUID resultatId) {
         return resultatAnalyseRepository.findById(resultatId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resultat d'analyse non trouve avec l'id : " + resultatId))
+                .orElseThrow(() -> new ResourceNotFoundException("Résultat d'analyse non trouvé avec l'id : " + resultatId))
                 .getDossierMedical().getPatient().getId();
     }
 }

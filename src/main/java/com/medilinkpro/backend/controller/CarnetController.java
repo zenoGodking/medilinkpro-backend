@@ -34,7 +34,7 @@ public class CarnetController {
     @Operation(summary = "Patient : qui a consulte ou modifie mon carnet (200 derniers acces)")
     public ResponseEntity<List<AccesCarnetResponse>> journal(@AuthenticationPrincipal Utilisateur utilisateur) {
         if (utilisateur.getRole() != Role.PATIENT) {
-            throw new AccessDeniedException("Reserve au patient");
+            throw new AccessDeniedException("Réservé au patient");
         }
         return ResponseEntity.ok(journalAccesService.journal(utilisateur.getId()));
     }

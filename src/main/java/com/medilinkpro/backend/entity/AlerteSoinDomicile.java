@@ -1,5 +1,7 @@
 package com.medilinkpro.backend.entity;
 
+import com.medilinkpro.backend.securite.TexteChiffreConverter;
+import jakarta.persistence.Convert;
 import com.medilinkpro.backend.enums.StatutAlerte;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -87,6 +89,7 @@ public class AlerteSoinDomicile {
 
     /** Compte-rendu redige par l'infirmiere a la fin de son intervention (obligatoire
      * pour liberer l'infirmiere et lui permettre de repondre a une nouvelle alerte). */
+    @Convert(converter = TexteChiffreConverter.class)
     @Column(name = "compte_rendu", columnDefinition = "TEXT")
     private String compteRendu;
 

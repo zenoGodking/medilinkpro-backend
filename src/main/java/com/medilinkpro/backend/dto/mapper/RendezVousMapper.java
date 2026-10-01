@@ -16,5 +16,6 @@ public interface RendezVousMapper {
     @Mapping(target = "specialiteMedecin", source = "medecin.specialite")
     @Mapping(target = "etablissementId", source = "etablissement.id")
     @Mapping(target = "etablissementNom", source = "etablissement.nom")
+    @Mapping(target = "avisDonne", ignore = true)
     RendezVousResponse toResponse(RendezVous rdv);
 }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final com.medilinkpro.backend.service.MotDePasseService motDePasseService;
     private final com.medilinkpro.backend.service.DirecteurService directeurService;
 
     @GetMapping("/comptes-en-attente")
@@ -38,10 +40,19 @@ public class AdminController {
     }
 
     @DeleteMapping("/utilisateurs/{id}")
-    @Operation(summary = "Supprimer definitivement un compte utilisateur, quel que soit son role")
-    public ResponseEntity<Void> supprimer(@PathVariable UUID id, @RequestParam UUID adminId) {
-        adminService.supprimer(id, adminId);
+    @Operation(summary = "Supprimer definitivement un compte utilisateur, quel que soit son role",
+            description = "L'administrateur est toujours l'utilisateur connecte (le parametre adminId, conserve pour compatibilite, est ignore).")
+    public ResponseEntity<Void> supprimer(@PathVariable UUID id, @RequestParam(required = false) UUID adminId,
+                                          @AuthenticationPrincipal com.medilinkpro.backend.entity.Utilisateur utilisateur) {
+        adminService.supprimer(id, utilisateur.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/utilisateurs/{id}/nouveau-mot-de-passe")
+    @Operation(summary = "Generer un nouveau mot de passe pour un utilisateur qui a perdu le sien (affiche une seule fois)")
+    public ResponseEntity<com.medilinkpro.backend.dto.response.MotDePasseTemporaireResponse> reinitialiserMotDePasse(
+            @PathVariable UUID id, @AuthenticationPrincipal com.medilinkpro.backend.entity.Utilisateur utilisateur) {
+        return ResponseEntity.ok(motDePasseService.genererParAdmin(id, utilisateur));
     }
 
     @PatchMapping("/comptes/{id}/valider")

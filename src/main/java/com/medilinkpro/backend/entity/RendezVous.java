@@ -22,7 +22,7 @@ import java.util.UUID;
 @Table(name = "rendez_vous")
 @Getter
 @Setter
-@ToString(exclude = {"patient", "medecin"})
+@ToString(exclude = {"patient", "medecin", "consultation"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -65,6 +65,24 @@ public class RendezVous {
 
     @Column(name = "code_confirmation", length = 20)
     private String codeConfirmation;
+
+    /** Rappel envoye une heure avant (le rappel de la veille utilise rappelEnvoye). */
+    @Builder.Default
+    @Column(name = "rappel_proche_envoye", nullable = false, columnDefinition = "boolean default false")
+    private boolean rappelProcheEnvoye = false;
+
+    /** Motif communique au patient par le medecin (refus, report, annulation). */
+    @Column(name = "motif_medecin", length = 500)
+    private String motifMedecin;
+
+    /** Consultation (compte rendu, ordonnance) redigee a l'issue du rendez-vous, notamment d'une teleconsultation. */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consultation_id")
+    private Consultation consultation;
+
+    /** Heure demandee a l'origine par le patient, si le medecin a reporte le rendez-vous. */
+    @Column(name = "date_heure_initiale")
+    private LocalDateTime dateHeureInitiale;
 
     @CreationTimestamp
     @Column(name = "cree_le", nullable = false, updatable = false)

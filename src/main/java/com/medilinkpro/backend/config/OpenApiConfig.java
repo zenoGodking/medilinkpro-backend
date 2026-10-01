@@ -25,11 +25,11 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("MediLinkPro API")
                         .description("API backend de la plateforme MediLinkPro - "
-                                + "Suivi medical electronique, geolocalisation des specialistes, "
-                                + "rendez-vous et teleconsultation.")
+                                + "Suivi médical électronique, géolocalisation des spécialistes, "
+                                + "rendez-vous et téléconsultation.")
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Equipe MediLinkPro")
+                                .name("Équipe MediLinkPro")
                                 .email("contact@medilinkpro.cm")))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()

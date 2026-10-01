@@ -54,6 +54,6 @@ public class AdminInitializer implements ApplicationRunner {
                 .statutCompte(StatutCompte.APPROUVE)
                 .actif(true)
                 .build());
-        log.info("Super administrateur de base cree : {}", email);
+        log.info("Super administrateur de base créé : {}", email);
     }
 }

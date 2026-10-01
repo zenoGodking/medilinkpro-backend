@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EtablissementService {
 
+    private final com.medilinkpro.backend.repository.InfirmierRepository infirmierRepository;
+
     private final EtablissementRepository etablissementRepository;
     private final EtablissementMapper etablissementMapper;
     private final FileStorageService fileStorageService;
@@ -47,7 +49,7 @@ public class EtablissementService {
     public EtablissementResponse enregistrerVisite(UUID id) {
         int lignesAffectees = etablissementRepository.incrementerVisites(id);
         if (lignesAffectees == 0) {
-            throw new ResourceNotFoundException("Etablissement non trouve avec l'id : " + id);
+            throw new ResourceNotFoundException("Établissement non trouvé avec l'id : " + id);
         }
         return findById(id);
     }
@@ -61,6 +63,8 @@ public class EtablissementService {
                 .ville(request.getVille())
                 .quartier(request.getQuartier())
                 .telephone(request.getTelephone())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .specialitesDisponibles(request.getSpecialitesDisponibles() != null
                         ? new ArrayList<>(request.getSpecialitesDisponibles())
                         : new ArrayList<>())
@@ -81,6 +85,10 @@ public class EtablissementService {
         if (request.getVille() != null) etablissement.setVille(request.getVille());
         if (request.getQuartier() != null) etablissement.setQuartier(request.getQuartier());
         if (request.getTelephone() != null) etablissement.setTelephone(request.getTelephone());
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            etablissement.setLatitude(request.getLatitude());
+            etablissement.setLongitude(request.getLongitude());
+        }
         if (request.getSpecialitesDisponibles() != null) {
             etablissement.setSpecialitesDisponibles(new ArrayList<>(request.getSpecialitesDisponibles()));
         }
@@ -92,6 +100,7 @@ public class EtablissementService {
     public void delete(UUID id) {
         EtablissementSante etablissement = getOrThrow(id);
         etablissement.getPhotos().forEach(fileStorageService::deleteByUrl);
+        infirmierRepository.findByEtablissementIdOrderByNomAsc(id).forEach(i -> i.setEtablissement(null));
         etablissementRepository.delete(etablissement);
     }
 
@@ -104,7 +113,7 @@ public class EtablissementService {
         EtablissementSante etablissement = getOrThrow(id);
 
         if (fichiers == null || fichiers.isEmpty()) {
-            throw new BadRequestException("Aucune photo envoyee");
+            throw new BadRequestException("Aucune photo envoyée");
         }
 
         List<String> nouvellesUrls = fileStorageService.storeImages(fichiers, "etablissements/" + id);
@@ -120,7 +129,7 @@ public class EtablissementService {
 
         boolean removed = etablissement.getPhotos().removeIf(p -> p.equals(url));
         if (!removed) {
-            throw new ResourceNotFoundException("Cette photo n'appartient pas a cet etablissement");
+            throw new ResourceNotFoundException("Cette photo n'appartient pas à cet établissement");
         }
         fileStorageService.deleteByUrl(url);
 
@@ -129,6 +138,6 @@ public class EtablissementService {
 
     private EtablissementSante getOrThrow(UUID id) {
         return etablissementRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Etablissement non trouve avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Établissement non trouvé avec l'id : " + id));
     }
 }

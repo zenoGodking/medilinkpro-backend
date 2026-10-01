@@ -90,7 +90,7 @@ public class CarnetAccesService {
                 || estMedecinValide(u)
                 || (u.getRole() == Role.PATIENT && u.getId().equals(patientId));
         if (!autorise) {
-            throw new AccessDeniedException("Vous n'avez pas acces a ce carnet medical");
+            throw new AccessDeniedException("Vous n'avez pas accès à ce carnet médical");
         }
         journalAccesService.enregistrer(patientId, u, TypeAccesCarnet.LECTURE);
     }
@@ -98,7 +98,7 @@ public class CarnetAccesService {
     /** Lecture d'une liste globale (tous les patients, toutes les consultations...). */
     public void verifierLectureGlobale(Utilisateur u) {
         if (u.getRole() != Role.ADMIN && !estMedecinValide(u)) {
-            throw new AccessDeniedException("Reserve aux medecins et aux administrateurs");
+            throw new AccessDeniedException("Réservé aux médecins et aux administrateurs");
         }
     }
 
@@ -118,15 +118,15 @@ public class CarnetAccesService {
     @Transactional(readOnly = true)
     public void verifierEcriture(Utilisateur u, UUID patientId) {
         if (!estMedecinValide(u)) {
-            throw new AccessDeniedException("Seul un medecin peut ecrire dans un carnet medical");
+            throw new AccessDeniedException("Seul un médecin peut écrire dans un carnet médical");
         }
         Patient patient = getPatient(patientId);
         if (patient.isDecede()) {
-            throw new BadRequestException("Ce patient est declare decede : son carnet est clos");
+            throw new BadRequestException("Ce patient est déclaré décédé : son carnet est clos");
         }
         if (motifEcriture(u.getId(), patientId).isEmpty()) {
             throw new AccessDeniedException(
-                    "Vous pouvez consulter ce carnet mais pas y ecrire : le patient doit d'abord vous y autoriser.");
+                    "Vous pouvez consulter ce carnet mais pas y écrire : le patient doit d'abord vous y autoriser.");
         }
         journalAccesService.enregistrer(patientId, u, TypeAccesCarnet.ECRITURE);
     }
@@ -160,7 +160,7 @@ public class CarnetAccesService {
     @Transactional(readOnly = true)
     public List<PatientAccessibleResponse> patientsAccessiblesEnEcriture(Utilisateur medecin) {
         if (!estMedecinValide(medecin)) {
-            throw new AccessDeniedException("Reserve aux medecins");
+            throw new AccessDeniedException("Réservé aux médecins");
         }
         Map<UUID, PatientAccessibleResponse> resultat = new LinkedHashMap<>();
         autorisationRepository.findByMedecinIdAndDateRevocationIsNull(medecin.getId())
@@ -196,9 +196,9 @@ public class CarnetAccesService {
     public AutorisationResponse autoriser(Utilisateur utilisateur, UUID medecinId) {
         verifierPatient(utilisateur);
         Medecin medecin = medecinRepository.findById(medecinId)
-                .orElseThrow(() -> new ResourceNotFoundException("Medecin non trouve"));
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin non trouvé"));
         if (!estMedecinValide(medecin)) {
-            throw new BadRequestException("Ce medecin n'est pas (encore) valide sur la plateforme");
+            throw new BadRequestException("Ce médecin n'est pas (encore) validé sur la plateforme");
         }
         return autorisationRepository.findFirstByPatientIdAndMedecinIdAndDateRevocationIsNull(utilisateur.getId(), medecinId)
                 .map(this::toAutorisation)
@@ -217,7 +217,7 @@ public class CarnetAccesService {
 
     private void verifierPatient(Utilisateur u) {
         if (u.getRole() != Role.PATIENT) {
-            throw new AccessDeniedException("Reserve au patient");
+            throw new AccessDeniedException("Réservé au patient");
         }
     }
 
@@ -241,11 +241,11 @@ public class CarnetAccesService {
     @Transactional
     public DecesResponse declarerDeces(UUID patientId, Utilisateur declarant, DeclarationDecesRequest request) {
         if (!estMedecinValide(declarant)) {
-            throw new AccessDeniedException("Seul un medecin peut declarer un deces");
+            throw new AccessDeniedException("Seul un médecin peut déclarer un décès");
         }
         Patient patient = getPatient(patientId);
         if (patient.isDecede()) {
-            throw new BadRequestException("Ce patient est deja declare decede");
+            throw new BadRequestException("Ce patient est déjà déclaré décédé");
         }
 
         patient.setDecede(true);
@@ -277,7 +277,7 @@ public class CarnetAccesService {
     @Transactional
     public void annulerDeces(UUID patientId, Utilisateur admin) {
         if (admin.getRole() != Role.ADMIN) {
-            throw new AccessDeniedException("Reserve a l'administrateur");
+            throw new AccessDeniedException("Réservé à l'administrateur");
         }
         Patient patient = getPatient(patientId);
         patient.setDecede(false);
@@ -289,15 +289,15 @@ public class CarnetAccesService {
 
     private String messageDeces(Patient patient, Utilisateur medecin) {
         String contact = medecin.getTelephone() != null ? " (" + medecin.getTelephone() + ")" : "";
-        return "MediLinkPro : nous avons le regret de vous informer du deces de "
+        return "MediLinkPro : nous avons le regret de vous informer du décès de "
                 + patient.getPrenom() + " " + patient.getNom()
                 + ", survenu le " + patient.getDateDeces().format(FORMAT_DATE)
-                + ". Deces constate par le Dr " + medecin.getPrenom() + " " + medecin.getNom() + contact
-                + ". Toutes nos condoleances.";
+                + ". Décès constaté par le Dr " + medecin.getPrenom() + " " + medecin.getNom() + contact
+                + ". Toutes nos condoléances.";
     }
 
     private Patient getPatient(UUID id) {
         return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouve avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'id : " + id));
     }
 }

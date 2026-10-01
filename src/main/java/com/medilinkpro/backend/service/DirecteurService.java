@@ -69,7 +69,7 @@ public class DirecteurService {
     @Transactional
     public EtablissementResponse attribuerDirecteur(UUID etablissementId, UUID directeurId) {
         EtablissementSante etablissement = etablissementRepository.findById(etablissementId)
-                .orElseThrow(() -> new ResourceNotFoundException("Etablissement non trouve"));
+                .orElseThrow(() -> new ResourceNotFoundException("Établissement non trouvé"));
         Directeur directeur = null;
         if (directeurId != null) {
             if (!(utilisateurRepository.findById(directeurId).orElse(null) instanceof Directeur d)) {

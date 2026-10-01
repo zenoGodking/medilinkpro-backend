@@ -29,8 +29,11 @@ public class FileStorageService {
 
     private static final Set<String> EXTENSIONS_AUTORISEES = Set.of("jpg", "jpeg", "png", "webp");
     private static final long TAILLE_MAX_OCTETS = 5L * 1024 * 1024; // 5 Mo
+    private static final Set<String> EXTENSIONS_DOCUMENTS = Set.of("jpg", "jpeg", "png", "webp", "pdf");
+    private static final long TAILLE_MAX_DOCUMENT_OCTETS = 10L * 1024 * 1024; // 10 Mo
 
     private final FileStorageProperties fileStorageProperties;
+    private final com.medilinkpro.backend.securite.ServiceChiffrement serviceChiffrement;
 
     /**
      * Enregistre une image sur disque, dans un sous-dossier donne, et retourne
@@ -48,13 +51,65 @@ public class FileStorageService {
      */
     public String storePrivateImage(MultipartFile file, String subFolder) {
         Path stored = writeImage(file, Paths.get(fileStorageProperties.getPrivateDir(), subFolder));
+        chiffrerSurPlace(stored);
         return subFolder + "/" + stored.getFileName();
+    }
+
+    /** Les fichiers prives (photos, documents medicaux) sont chiffres au repos (AES-256-GCM). */
+    private void chiffrerSurPlace(Path chemin) {
+        try {
+            Files.write(chemin, serviceChiffrement.chiffrerFichier(Files.readAllBytes(chemin)));
+        } catch (IOException e) {
+            try { Files.deleteIfExists(chemin); } catch (IOException ignored) { /* best-effort */ }
+            throw new BadRequestException("Erreur lors de l'enregistrement du fichier : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Enregistre un document medical (photo scannee ou PDF) dans le dossier prive.
+     * Retourne le chemin relatif a stocker en base ; le fichier se relit via readPrivate.
+     */
+    public String storePrivateDocument(MultipartFile file, String subFolder) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Le fichier envoyé est vide");
+        }
+        if (file.getSize() > TAILLE_MAX_DOCUMENT_OCTETS) {
+            throw new BadRequestException("Le fichier dépasse la taille maximale autorisée (10 Mo)");
+        }
+        String extension = extractExtension(file.getOriginalFilename());
+        if (!EXTENSIONS_DOCUMENTS.contains(extension)) {
+            throw new BadRequestException("Format non supporté. Formats acceptés : jpg, jpeg, png, webp, pdf");
+        }
+        String contentType = file.getContentType();
+        boolean pdf = "pdf".equals(extension);
+        if (contentType == null || (pdf ? !contentType.equals("application/pdf") : !contentType.startsWith("image/"))) {
+            throw new BadRequestException("Le contenu du fichier ne correspond pas à son extension");
+        }
+        try {
+            if (pdf && !commencePar(file, "%PDF")) {
+                throw new BadRequestException("Le fichier n'est pas un PDF valide");
+            }
+            Path targetDir = Paths.get(fileStorageProperties.getPrivateDir(), subFolder).toAbsolutePath().normalize();
+            Files.createDirectories(targetDir);
+            Path targetPath = targetDir.resolve(UUID.randomUUID() + "." + extension).normalize();
+            Files.write(targetPath, serviceChiffrement.chiffrerFichier(file.getBytes()));
+            return subFolder + "/" + targetPath.getFileName();
+        } catch (IOException e) {
+            throw new BadRequestException("Erreur lors de l'enregistrement du fichier : " + e.getMessage());
+        }
+    }
+
+    private static boolean commencePar(MultipartFile file, String signature) throws IOException {
+        byte[] attendu = signature.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        try (InputStream in = file.getInputStream()) {
+            return java.util.Arrays.equals(in.readNBytes(attendu.length), attendu);
+        }
     }
 
     /** Relit un fichier du dossier prive a partir du chemin relatif retourne par storePrivateImage. */
     public byte[] readPrivate(String relativePath) {
         try {
-            return Files.readAllBytes(resolvePrivate(relativePath));
+            return serviceChiffrement.dechiffrerFichier(Files.readAllBytes(resolvePrivate(relativePath)));
         } catch (IOException e) {
             throw new ResourceNotFoundException("Fichier introuvable");
         }
@@ -82,20 +137,20 @@ public class FileStorageService {
 
     private Path writeImage(MultipartFile file, Path dir) {
         if (file == null || file.isEmpty()) {
-            throw new BadRequestException("Le fichier envoye est vide");
+            throw new BadRequestException("Le fichier envoyé est vide");
         }
         if (file.getSize() > TAILLE_MAX_OCTETS) {
-            throw new BadRequestException("L'image depasse la taille maximale autorisee (5 Mo)");
+            throw new BadRequestException("L'image dépasse la taille maximale autorisée (5 Mo)");
         }
 
         String extension = extractExtension(file.getOriginalFilename());
         if (!EXTENSIONS_AUTORISEES.contains(extension)) {
-            throw new BadRequestException("Format d'image non supporte. Formats acceptes : jpg, jpeg, png, webp");
+            throw new BadRequestException("Format d'image non supporté. Formats acceptés : jpg, jpeg, png, webp");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BadRequestException("Le fichier envoye n'est pas une image valide");
+            throw new BadRequestException("Le fichier envoyé n'est pas une image valide");
         }
 
         try {

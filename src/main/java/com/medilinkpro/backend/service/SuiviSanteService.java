@@ -134,11 +134,11 @@ public class SuiviSanteService {
         double v = m.getValeur();
         return switch (m.getType()) {
             case TENSION -> v < 90 || (m.getValeur2() != null && m.getValeur2() < 60) ? "Tension basse"
-                    : niveau == NiveauMesure.ALERTE ? "Tension tres elevee : consultez rapidement" : "Tension elevee";
-            case GLYCEMIE -> v < 0.70 ? "Hypoglycemie : prenez du sucre et consultez si cela persiste"
-                    : niveau == NiveauMesure.ALERTE ? "Glycemie tres elevee : consultez rapidement" : "Glycemie elevee";
-            case TEMPERATURE -> v < 35 ? "Temperature tres basse" : niveau == NiveauMesure.ALERTE ? "Fievre tres elevee" : "Fievre";
-            case SATURATION_O2 -> niveau == NiveauMesure.ALERTE ? "Oxygene tres bas : urgence" : "Oxygene un peu bas";
+                    : niveau == NiveauMesure.ALERTE ? "Tension très élevée : consultez rapidement" : "Tension élevée";
+            case GLYCEMIE -> v < 0.70 ? "Hypoglycémie : prenez du sucre et consultez si cela persiste"
+                    : niveau == NiveauMesure.ALERTE ? "Glycémie très élevée : consultez rapidement" : "Glycémie élevée";
+            case TEMPERATURE -> v < 35 ? "Température très basse" : niveau == NiveauMesure.ALERTE ? "Fièvre très élevée" : "Fievre";
+            case SATURATION_O2 -> niveau == NiveauMesure.ALERTE ? "Oxygène très bas : urgence" : "Oxygène un peu bas";
             case POIDS -> null;
         };
     }
@@ -163,7 +163,7 @@ public class SuiviSanteService {
         verifierSoi(u, patientId);
         LocalDate debut = r.dateDebut() != null ? r.dateDebut() : LocalDate.now();
         if (r.dateFin() != null && r.dateFin().isBefore(debut)) {
-            throw new BadRequestException("La date de fin precede la date de debut");
+            throw new BadRequestException("La date de fin précède la date de début");
         }
         RappelMedicament rappel = rappelRepository.save(RappelMedicament.builder()
                 .patient(getPatient(patientId))
@@ -242,7 +242,7 @@ public class SuiviSanteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vaccination introuvable"));
         verifierSoi(u, v.getPatient().getId());
         if (v.getStatut() == Vaccination.Statut.VALIDEE) {
-            throw new BadRequestException("Un vaccin valide par un medecin ne peut pas etre supprime");
+            throw new BadRequestException("Un vaccin validé par un médecin ne peut pas être supprimé");
         }
         vaccinationRepository.delete(v);
     }
@@ -266,12 +266,12 @@ public class SuiviSanteService {
         verifierEcritureOuSoi(u, patientId);
         long semaines = ChronoUnit.DAYS.between(r.dateDernieresRegles(), LocalDate.now()) / 7;
         if (semaines > MAX_SA_GROSSESSE_EN_COURS) {
-            throw new BadRequestException("Date des dernieres regles trop ancienne pour une grossesse en cours");
+            throw new BadRequestException("Date des dernières règles trop ancienne pour une grossesse en cours");
         }
         boolean dejaEnCours = grossesseRepository.findByPatientIdOrderByDateDernieresReglesDesc(patientId).stream()
                 .anyMatch(g -> g.getStatut() == Grossesse.Statut.EN_COURS);
         if (dejaEnCours) {
-            throw new BadRequestException("Une grossesse est deja en cours de suivi");
+            throw new BadRequestException("Une grossesse est déjà en cours de suivi");
         }
         return toResponse(grossesseRepository.save(Grossesse.builder()
                 .patient(getPatient(patientId))
@@ -298,7 +298,7 @@ public class SuiviSanteService {
         Grossesse g = getGrossesse(grossesseId);
         carnetAccesService.verifierEcriture(u, g.getPatient().getId());
         if (r.date().isBefore(g.getDateDernieresRegles())) {
-            throw new BadRequestException("La visite precede le debut de la grossesse");
+            throw new BadRequestException("La visite précède le début de la grossesse");
         }
         g.getVisites().add(VisitePrenatale.builder()
                 .grossesse(g).date(r.date()).poids(r.poids())
@@ -347,11 +347,11 @@ public class SuiviSanteService {
 
     private void verifierSoi(Utilisateur u, UUID patientId) {
         if (!u.getId().equals(patientId)) {
-            throw new AccessDeniedException("Reserve au patient concerne");
+            throw new AccessDeniedException("Reserve au patient concerné");
         }
     }
 
     private Patient getPatient(UUID id) {
-        return patientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient non trouve"));
+        return patientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé"));
     }
 }

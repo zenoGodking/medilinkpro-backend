@@ -198,7 +198,7 @@ class GeolocalisationAlerteTest {
     private Infirmier infirmiere(String nom, double lat, double lng, LocalDateTime datePosition) {
         return utilisateurRepository.save(Infirmier.builder()
                 .nom(nom).prenom("Inf").email(nom + "@test.cm").motDePasse("x").telephone("+237699000000")
-                .role(Role.INFIRMIER).statutCompte(StatutCompte.APPROUVE).actif(true)
+                .role(Role.INFIRMIER).photoProfilChemin("photos-infirmiers/test.jpg").statutCompte(StatutCompte.APPROUVE).actif(true)
                 .latitude(lat).longitude(lng).datePosition(datePosition).build());
     }
 

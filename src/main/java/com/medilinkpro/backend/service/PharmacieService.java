@@ -37,7 +37,7 @@ public class PharmacieService {
     /** Duree de validite d'une ordonnance a compter de son emission. */
     static final int VALIDITE_MOIS = 3;
     private static final SecureRandom ALEATOIRE = new SecureRandom();
-    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'a' HH:mm");
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
     private final OrdonnanceRepository ordonnanceRepository;
     private final UtilisateurRepository utilisateurRepository;
@@ -73,7 +73,7 @@ public class PharmacieService {
     public VerificationOrdonnanceResponse delivrer(String jeton, Utilisateur utilisateur) {
         Ordonnance o = parJeton(jeton);
         if (expiration(o).isBefore(LocalDate.now())) {
-            throw new BadRequestException("Ordonnance expiree depuis le " + expiration(o) + " : elle ne peut plus etre delivree");
+            throw new BadRequestException("Ordonnance expirée depuis le " + expiration(o) + " : elle ne peut plus être délivrée");
         }
         Pharmacien pharmacien = (Pharmacien) utilisateurRepository.findById(utilisateur.getId()).orElseThrow();
         String par = pharmacien.getPrenom() + " " + pharmacien.getNom()
@@ -81,7 +81,7 @@ public class PharmacieService {
         int maj = ordonnanceRepository.delivrerSiDisponible(o.getId(), LocalDateTime.now(), pharmacien.getId(), par);
         if (maj == 0) {
             Ordonnance deja = ordonnanceRepository.findById(o.getId()).orElseThrow();
-            throw new ConflictException("Ordonnance deja delivree le " + deja.getDateDelivrance().format(FORMAT)
+            throw new ConflictException("Ordonnance déjà délivrée le " + deja.getDateDelivrance().format(FORMAT)
                     + " par " + deja.getDelivreePar());
         }
         journalAccesService.enregistrer(o.getPatient().getId(), pharmacien, TypeAccesCarnet.PHARMACIE);
@@ -97,7 +97,7 @@ public class PharmacieService {
     private Ordonnance parJeton(String jeton) {
         return ordonnanceRepository.findByJetonVerification(jeton)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Ordonnance inconnue : ce QR code n'a pas ete emis par MediLinkPro (possible falsification)"));
+                        "Ordonnance inconnue : ce QR code n'a pas été émis par MediLinkPro (possible falsification)"));
     }
 
     private static LocalDate expiration(Ordonnance o) {

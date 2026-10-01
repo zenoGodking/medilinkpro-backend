@@ -82,10 +82,10 @@ public class NotificationPushService {
             if (statut == 404 || statut == 410) {
                 abonnementRepository.findByEndpoint(a.getEndpoint()).ifPresent(abonnementRepository::delete);
             } else if (statut >= 400) {
-                log.warn("Notification push refusee ({}) pour l'utilisateur {}", statut, a.getUtilisateurId());
+                log.warn("Notification push refusée ({}) pour l'utilisateur {}", statut, a.getUtilisateurId());
             }
         } catch (Exception e) {
-            log.warn("Echec d'envoi push a l'utilisateur {} : {}", a.getUtilisateurId(), e.getMessage());
+            log.warn("Échec d'envoi push à l'utilisateur {} : {}", a.getUtilisateurId(), e.getMessage());
         }
     }
 }

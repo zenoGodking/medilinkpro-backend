@@ -52,6 +52,13 @@ public class EtablissementSante {
     @Column(name = "telephone", length = 30)
     private String telephone;
 
+    /** Position GPS (carte des etablissements et itineraire dans l'application). */
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     @ElementCollection
     @CollectionTable(name = "etablissement_specialites", joinColumns = @JoinColumn(name = "etablissement_id"))
     @Column(name = "specialite")

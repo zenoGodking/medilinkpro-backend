@@ -94,7 +94,7 @@ class PharmacieTest {
         // Une deuxieme pharmacie (ou la meme) ne peut pas la delivrer a nouveau
         String message = json(appeler(post("/api/pharmacie/delivrer/" + jeton), pharmaB).andExpect(status().isConflict()))
                 .get("message").asText();
-        assertThat(message).contains("deja delivree").contains("Pharmacie du Centre");
+        assertThat(message).contains("déjà délivrée").contains("Pharmacie du Centre");
 
         assertThat(json(appeler(get("/api/pharmacie/mes-delivrances"), pharmaA))).hasSize(1);
         assertThat(json(appeler(get("/api/pharmacie/mes-delivrances"), pharmaB))).isEmpty();

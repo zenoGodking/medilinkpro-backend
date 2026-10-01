@@ -37,6 +37,9 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
+    @org.springframework.beans.factory.annotation.Value("${medilinkpro.cors.origines:}")
+    private String originesCors;
+
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/**",
             "/api/etablissements/public/**",
@@ -61,6 +64,11 @@ public class SecurityConfig {
                         // Module Geolocalisation & Etablissements : lecture ouverte aux roles authentifies,
                         // creation/modification/suppression (dont photos) reservees au Directeur et a l'Admin
                         .requestMatchers("/api/medecins/recherche").authenticated()
+                        // Fiche d'un medecin (prise de rendez-vous) et son calendrier : lecture pour tout connecte,
+                        // la semaine type et les absences sont gerees par le medecin lui-meme
+                        .requestMatchers(HttpMethod.GET, "/api/medecins/*").authenticated()
+                        .requestMatchers("/api/disponibilites/moi", "/api/disponibilites/moi/**").hasRole("MEDECIN")
+                        .requestMatchers(HttpMethod.GET, "/api/disponibilites/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/etablissements/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/etablissements/**").hasAnyRole("DIRECTEUR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/etablissements/**").hasAnyRole("DIRECTEUR", "ADMIN")
@@ -100,12 +108,21 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/patients/*/deces").hasRole("MEDECIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/patients/*/deces").hasRole("ADMIN")
                         .requestMatchers("/api/dossiers-medicaux/**", "/api/consultations/**", "/api/ordonnances/**",
-                                "/api/resultats-analyses/**", "/api/patients/**", "/api/carnets/**", "/api/suivi/**")
+                                "/api/resultats-analyses/**", "/api/patients/**", "/api/carnets/**", "/api/suivi/**",
+                                "/api/documents-medicaux/**")
                         .hasAnyRole("PATIENT", "MEDECIN", "ADMIN")
 
                         // Rendez-vous : Patient, Medecin, Admin (participants verifies dans le controleur)
                         .requestMatchers("/api/rendez-vous/**")
                         .hasAnyRole("PATIENT", "MEDECIN", "ADMIN")
+
+                        // Infirmieres : la professionnelle gere son profil/photo et ses demandes d'adhesion ;
+                        // profil et photo lisibles selon les regles d'InfirmierService
+                        .requestMatchers("/api/infirmiers/moi", "/api/infirmiers/moi/**").hasRole("INFIRMIER")
+                        .requestMatchers(HttpMethod.GET, "/api/infirmiers/*/profil", "/api/infirmiers/*/photo").authenticated()
+
+                        // Teleconsultation : le medecin et le patient du rendez-vous (verifies dans le service)
+                        .requestMatchers("/api/teleconsultations/**").hasAnyRole("PATIENT", "MEDECIN")
 
                         .requestMatchers("/api/medecins/**").hasAnyRole("MEDECIN", "ADMIN", "DIRECTEUR")
 
@@ -134,6 +151,7 @@ public class SecurityConfig {
                         // Integration Medecin-Etablissement : la reponse est ouverte a Medecin/Directeur/Admin,
                         // le service verifie ensuite que l'acteur est bien celui attendu selon l'initiateur
                         .requestMatchers(HttpMethod.PATCH, "/api/demandes-integration/*/repondre").hasAnyRole("MEDECIN", "DIRECTEUR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/demandes-integration/en-attente").hasAnyRole("DIRECTEUR", "ADMIN")
 
                         .anyRequest().authenticated()
                 )
@@ -161,10 +179,16 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    /** Origines du frontend autorisees (medilinkpro.cors.origines), aussi utilisees par le WebSocket. */
+    public List<String> originesAutorisees() {
+        return java.util.Arrays.stream(originesCors.split(","))
+                .map(String::trim).filter(o -> !o.isEmpty()).toList();
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(originesAutorisees());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

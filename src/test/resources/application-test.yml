@@ -14,6 +14,15 @@ spring:
     show-sql: false
 
 medilinkpro:
+  rappels-rdv:
+    intervalle-ms: 86400000
+  super-admin:
+    email: womeloic@gmail.com
+    mot-de-passe: Hope123
+  chiffrement:
+    cle: ZGV2LWNsZS1tZWRpbGlua3Byby0zMi1vY3RldHMhISE=
+  cors:
+    origines: http://localhost:*
   jwt:
     secret: NDgyZDcwYjQ3YTRmMzM5ZjU0MTk4ZTU0YjQ0YTQ4ODhlMzEzYjc4ZjY0YzQ4NzU5ZjA0ZTQ4ODg1ZjQ4ZTQ4
     expiration-ms: 86400000

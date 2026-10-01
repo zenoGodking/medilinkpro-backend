@@ -4,3 +4,6 @@ target/
 uploads/
 private-uploads/
 face-service/node_modules/
+
+# Secrets locaux (docker-compose)
+.env

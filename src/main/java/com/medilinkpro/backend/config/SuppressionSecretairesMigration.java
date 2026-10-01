@@ -28,7 +28,7 @@ public class SuppressionSecretairesMigration implements ApplicationRunner {
         jdbcTemplate.execute("DROP TABLE IF EXISTS secretaires");
         int supprimes = jdbcTemplate.update("DELETE FROM utilisateurs WHERE role = 'SECRETAIRE'");
         if (supprimes > 0) {
-            log.warn("Role SECRETAIRE retire : {} compte(s) secretaire supprime(s)", supprimes);
+            log.warn("Rôle SECRETAIRE retiré : {} compte(s) secrétaire supprimé(s)", supprimes);
         }
     }
 }

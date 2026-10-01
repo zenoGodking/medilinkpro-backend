@@ -28,12 +28,12 @@ public class EtablissementAccesService {
             return;
         }
         EtablissementSante etablissement = etablissementRepository.findById(etablissementId)
-                .orElseThrow(() -> new ResourceNotFoundException("Etablissement non trouve avec l'id : " + etablissementId));
+                .orElseThrow(() -> new ResourceNotFoundException("Établissement non trouvé avec l'id : " + etablissementId));
         boolean estSonDirecteur = u.getRole() == Role.DIRECTEUR
                 && etablissement.getDirecteur() != null
                 && etablissement.getDirecteur().getId().equals(u.getId());
         if (!estSonDirecteur) {
-            throw new AccessDeniedException("Vous ne gerez pas cet etablissement");
+            throw new AccessDeniedException("Vous ne gérez pas cet établissement");
         }
     }
 }

@@ -7,5 +7,7 @@ package com.medilinkpro.backend.enums;
  */
 public enum InitiateurDemande {
     ETABLISSEMENT,
-    MEDECIN
+    MEDECIN,
+    /** Une infirmiere demande a rejoindre l'etablissement : le Directeur/Admin doit valider. */
+    INFIRMIER
 }

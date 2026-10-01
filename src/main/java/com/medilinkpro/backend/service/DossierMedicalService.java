@@ -41,12 +41,12 @@ public class DossierMedicalService {
     public DossierMedicalResponse findByPatientId(UUID patientId) {
         DossierMedical dossier = dossierMedicalRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Aucun dossier medical trouve pour le patient : " + patientId));
+                        "Aucun dossier médical trouvé pour le patient : " + patientId));
         return dossierMedicalMapper.toResponse(dossier);
     }
 
     private DossierMedical getOrThrow(UUID id) {
         return dossierMedicalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Dossier medical non trouve avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical non trouvé avec l'id : " + id));
     }
 }

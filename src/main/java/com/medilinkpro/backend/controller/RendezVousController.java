@@ -1,11 +1,14 @@
 package com.medilinkpro.backend.controller;
 
+import com.medilinkpro.backend.dto.request.AvisRequest;
+import com.medilinkpro.backend.dto.request.DecisionRendezVousRequest;
 import com.medilinkpro.backend.dto.request.RendezVousRequest;
+import com.medilinkpro.backend.dto.response.AvisMedecinResumeResponse;
+import com.medilinkpro.backend.dto.response.AvisResponse;
 import com.medilinkpro.backend.dto.request.StatutRendezVousRequest;
 import com.medilinkpro.backend.dto.response.RendezVousResponse;
 import com.medilinkpro.backend.entity.Utilisateur;
 import com.medilinkpro.backend.enums.Role;
-import com.medilinkpro.backend.enums.StatutRendezVous;
 import com.medilinkpro.backend.service.CarnetAccesService;
 import com.medilinkpro.backend.service.RendezVousService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,27 +74,66 @@ public class RendezVousController {
     @PostMapping
     @Operation(
             summary = "Prendre un rendez-vous (F13) - le patient pour lui-meme",
-            description = "Verifie la disponibilite du creneau puis confirme le rendez-vous"
+            description = "Vérifie la disponibilité du créneau puis confirme le rendez-vous"
     )
     public ResponseEntity<RendezVousResponse> create(
             @Valid @RequestBody RendezVousRequest request, @AuthenticationPrincipal Utilisateur utilisateur) {
         if (utilisateur.getRole() != Role.ADMIN && !utilisateur.getId().equals(request.getPatientId())) {
-            throw new AccessDeniedException("Un rendez-vous ne peut etre pris que par le patient lui-meme");
+            throw new AccessDeniedException("Un rendez-vous ne peut être pris que par le patient lui-même");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(rendezVousService.create(request));
     }
 
     @PatchMapping("/{id}/statut")
-    @Operation(summary = "Changer le statut d'un rendez-vous : le patient peut seulement annuler, le medecin gere son agenda")
+    @Operation(summary = "Annuler (patient ou medecin), ou cloturer un rendez-vous passe (medecin : TERMINE / NO_SHOW)")
     public ResponseEntity<RendezVousResponse> updateStatut(
             @PathVariable UUID id, @Valid @RequestBody StatutRendezVousRequest request,
             @AuthenticationPrincipal Utilisateur utilisateur) {
-        RendezVousResponse rdv = rendezVousService.findById(id);
-        verifierParticipant(rdv, utilisateur);
-        if (utilisateur.getId().equals(rdv.getPatientId()) && request.getStatut() != StatutRendezVous.ANNULE) {
-            throw new AccessDeniedException("Le patient peut uniquement annuler son rendez-vous");
-        }
-        return ResponseEntity.ok(rendezVousService.updateStatut(id, request));
+        return ResponseEntity.ok(rendezVousService.updateStatut(id, request, utilisateur));
+    }
+
+    @PatchMapping("/{id}/accepter")
+    @Operation(summary = "Medecin : accepter une demande de rendez-vous (le patient est prevenu)")
+    public ResponseEntity<RendezVousResponse> accepter(@PathVariable UUID id, @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(rendezVousService.accepter(id, utilisateur));
+    }
+
+    @PatchMapping("/{id}/refuser")
+    @Operation(summary = "Medecin : refuser un rendez-vous, avec un motif communique au patient")
+    public ResponseEntity<RendezVousResponse> refuser(@PathVariable UUID id,
+                                                      @Valid @RequestBody(required = false) DecisionRendezVousRequest decision,
+                                                      @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(rendezVousService.refuser(id, utilisateur,
+                decision != null ? decision : new DecisionRendezVousRequest()));
+    }
+
+    @PatchMapping("/{id}/reporter")
+    @Operation(summary = "Medecin : deplacer un rendez-vous sur un autre creneau libre (le patient est prevenu)")
+    public ResponseEntity<RendezVousResponse> reporter(@PathVariable UUID id,
+                                                       @Valid @RequestBody DecisionRendezVousRequest decision,
+                                                       @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(rendezVousService.reporter(id, utilisateur, decision));
+    }
+
+    @PostMapping("/{id}/avis")
+    @Operation(summary = "Patient : noter le medecin apres le rendez-vous (une fois par rendez-vous)")
+    public ResponseEntity<AvisResponse> donnerAvis(@PathVariable UUID id, @Valid @RequestBody AvisRequest request,
+                                                   @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(rendezVousService.donnerAvis(id, utilisateur, request));
+    }
+
+    @GetMapping("/avis/medecins/{medecinId}")
+    @Operation(summary = "Avis des patients sur un medecin (moyenne, nombre, commentaires)")
+    public ResponseEntity<AvisMedecinResumeResponse> avisMedecin(@PathVariable UUID medecinId,
+                                                                 @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(rendezVousService.avisMedecin(medecinId, utilisateur));
+    }
+
+    @PatchMapping("/avis/{avisId}/masquer")
+    @Operation(summary = "Administrateur : masquer (masque=true) ou reafficher un avis")
+    public ResponseEntity<AvisResponse> masquerAvis(@PathVariable UUID avisId, @RequestParam(defaultValue = "true") boolean masque,
+                                                    @AuthenticationPrincipal Utilisateur utilisateur) {
+        return ResponseEntity.ok(rendezVousService.masquerAvis(avisId, masque, utilisateur));
     }
 
     @DeleteMapping("/{id}")
@@ -111,7 +153,7 @@ public class RendezVousController {
 
     private static void exigerAdmin(Utilisateur u) {
         if (u.getRole() != Role.ADMIN) {
-            throw new AccessDeniedException("Reserve a l'administrateur");
+            throw new AccessDeniedException("Réservé à l'administrateur");
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.medilinkpro.backend.entity;
 
+import com.medilinkpro.backend.securite.TexteChiffreConverter;
+import jakarta.persistence.Convert;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.medilinkpro.backend.enums.GroupeSanguin;
 import jakarta.persistence.*;
@@ -37,8 +39,12 @@ public class Patient extends Utilisateur {
     @Column(name = "groupe_sanguin", length = 20)
     private GroupeSanguin groupeSanguin;
 
+    @Convert(converter = TexteChiffreConverter.class)
+
     @Column(name = "allergies", columnDefinition = "TEXT")
     private String allergies;
+
+    @Convert(converter = TexteChiffreConverter.class)
 
     @Column(name = "antecedents", columnDefinition = "TEXT")
     private String antecedents;
@@ -48,6 +54,7 @@ public class Patient extends Utilisateur {
      * par le patient en sachant qu'elles sont visibles de tout utilisateur qui le retrouve
      * accidente (contrairement aux antecedents, reserves au personnel de sante).
      */
+    @Convert(converter = TexteChiffreConverter.class)
     @Column(name = "conditions_urgence", columnDefinition = "TEXT")
     private String conditionsUrgence;
 
@@ -67,6 +74,8 @@ public class Patient extends Utilisateur {
 
     @Column(name = "date_deces")
     private LocalDate dateDeces;
+
+    @Convert(converter = TexteChiffreConverter.class)
 
     @Column(name = "circonstances_deces", columnDefinition = "TEXT")
     private String circonstancesDeces;

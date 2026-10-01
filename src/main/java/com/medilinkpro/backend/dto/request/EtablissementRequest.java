@@ -24,5 +24,13 @@ public class EtablissementRequest {
     private String ville;
     private String quartier;
     private String telephone;
+
+    @jakarta.validation.constraints.DecimalMin(value = "-90.0", message = "Latitude invalide")
+    @jakarta.validation.constraints.DecimalMax(value = "90.0", message = "Latitude invalide")
+    private Double latitude;
+
+    @jakarta.validation.constraints.DecimalMin(value = "-180.0", message = "Longitude invalide")
+    @jakarta.validation.constraints.DecimalMax(value = "180.0", message = "Longitude invalide")
+    private Double longitude;
     private List<String> specialitesDisponibles;
 }

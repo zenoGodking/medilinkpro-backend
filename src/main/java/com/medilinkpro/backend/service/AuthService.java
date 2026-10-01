@@ -37,15 +37,20 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final ReconnaissanceFacialeService reconnaissanceFacialeService;
+    private final FileStorageService fileStorageService;
+    private final com.medilinkpro.backend.securite.LimiteurTentatives limiteur;
+
+    private static final java.time.Duration FENETRE_CONNEXION = java.time.Duration.ofMinutes(15);
 
     /**
      * @param photo       photo du visage, obligatoire pour un patient (reconnaissance faciale en urgence)
+     *                    et pour une infirmiere (photo de profil presentee aux patients)
      * @param descripteur empreinte faciale calculee par le navigateur a partir de cette photo
      */
     @Transactional
     public AuthResponse register(RegisterRequest request, MultipartFile photo, List<Double> descripteur) {
         if (utilisateurRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Un compte existe deja avec cet email");
+            throw new BadRequestException("Un compte existe déjà avec cet email");
         }
 
         Utilisateur utilisateur = buildUtilisateur(request);
@@ -54,6 +59,13 @@ public class AuthService {
                 throw new BadRequestException("Une photo du visage est obligatoire pour l'inscription d'un patient");
             }
             reconnaissanceFacialeService.enroler(patient, photo, descripteur);
+        }
+        if (utilisateur instanceof Infirmier infirmier) {
+            // Le patient doit pouvoir reconnaitre l'infirmiere qui vient chez lui.
+            if (photo == null || photo.isEmpty()) {
+                throw new BadRequestException("Une photo de profil est obligatoire pour l'inscription d'une infirmière");
+            }
+            infirmier.setPhotoProfilChemin(fileStorageService.storePrivateImage(photo, InfirmierService.DOSSIER_PHOTOS));
         }
         Utilisateur saved = utilisateurRepository.save(utilisateur);
 
@@ -74,7 +86,7 @@ public class AuthService {
                     .nom(saved.getNom())
                     .prenom(saved.getPrenom())
                     .role(saved.getRole())
-                    .message("Votre demande d'inscription a bien ete recue. Un administrateur doit valider votre compte avant votre premiere connexion.")
+                    .message("Votre demande d'inscription a bien été reçue. Un administrateur doit valider votre compte avant votre première connexion.")
                     .build();
         }
 
@@ -91,10 +103,26 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getMotDePasse())
-        );
+    /**
+     * Connexion. Apres 5 echecs en 15 minutes sur un meme email (ou 20 depuis une meme adresse IP),
+     * les tentatives sont refusees jusqu'a la fin de la fenetre (protection contre la force brute).
+     */
+    public AuthResponse login(LoginRequest request, String ip) {
+        String cleEmail = "login:" + ReinitialisationMotDePasseService.normaliser(request.getEmail());
+        String cleIp = "login-ip:" + ip;
+        String message = "Trop de tentatives de connexion. Réessayez dans 15 minutes ou réinitialisez votre mot de passe.";
+        limiteur.verifier(cleEmail, 5, FENETRE_CONNEXION, message);
+        limiteur.verifier(cleIp, 20, FENETRE_CONNEXION, message);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getMotDePasse())
+            );
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            limiteur.enregistrer(cleEmail, FENETRE_CONNEXION);
+            limiteur.enregistrer(cleIp, FENETRE_CONNEXION);
+            throw e;
+        }
+        limiteur.reinitialiser(cleEmail);
 
         Utilisateur utilisateur = utilisateurRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadRequestException("Email ou mot de passe incorrect"));
@@ -103,7 +131,7 @@ public class AuthService {
             throw new CompteNonValideException("Votre compte est en attente de validation par un administrateur.");
         }
         if (utilisateur.getStatutCompte() == StatutCompte.REJETE) {
-            throw new CompteNonValideException("Votre demande d'inscription a ete refusee. Contactez un administrateur pour plus d'informations.");
+            throw new CompteNonValideException("Votre demande d'inscription a été refusée. Contactez un administrateur pour plus d'informations.");
         }
 
         String token = jwtService.generateToken(utilisateur);

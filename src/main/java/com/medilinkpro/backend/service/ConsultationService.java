@@ -63,14 +63,14 @@ public class ConsultationService {
     @Transactional
     public ConsultationResponse create(ConsultationRequest request) {
         Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouve avec l'id : " + request.getPatientId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient non trouvé avec l'id : " + request.getPatientId()));
 
         Medecin medecin = medecinRepository.findById(request.getMedecinId())
-                .orElseThrow(() -> new ResourceNotFoundException("Medecin non trouve avec l'id : " + request.getMedecinId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin non trouvé avec l'id : " + request.getMedecinId()));
 
         DossierMedical dossier = dossierMedicalRepository.findByPatientId(patient.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Aucun dossier medical trouve pour le patient : " + patient.getId()));
+                        "Aucun dossier médical trouvé pour le patient : " + patient.getId()));
 
         Consultation consultation = Consultation.builder()
                 .dossierMedical(dossier)
@@ -94,6 +94,6 @@ public class ConsultationService {
 
     private Consultation getOrThrow(UUID id) {
         return consultationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consultation non trouvee avec l'id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation non trouvée avec l'id : " + id));
     }
 }

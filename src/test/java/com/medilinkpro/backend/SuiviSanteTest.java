@@ -76,7 +76,7 @@ class SuiviSanteTest {
         JsonNode mesures = json(appeler(get(base + "/mesures"), aline));
         assertThat(mesures).hasSize(6);
         assertThat(niveaux(mesures)).containsExactly("ATTENTION", "NORMAL", "ALERTE", "NORMAL", "ATTENTION", "ALERTE");
-        assertThat(mesures.get(2).get("interpretation").asText()).contains("Hypoglycemie");
+        assertThat(mesures.get(2).get("interpretation").asText()).contains("Hypoglycémie");
         assertThat(mesures.get(0).get("unite").asText()).isEqualTo("mmHg");
     }
 

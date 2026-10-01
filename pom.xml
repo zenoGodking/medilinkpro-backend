@@ -137,6 +137,11 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- `mvn spring-boot:run` demarre avec le profil dev (secrets de developpement) ;
+                         le jar de production n'active aucun profil et exige de vrais secrets. -->
+                    <profiles>
+                        <profile>dev</profile>
+                    </profiles>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

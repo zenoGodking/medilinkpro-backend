@@ -57,7 +57,7 @@ class SuiviTempsReelWebSocketTest {
                 .role(Role.PATIENT).statutCompte(StatutCompte.APPROUVE).actif(true).build());
         Infirmier infirmiere = utilisateurRepository.save(Infirmier.builder()
                 .nom("Ngo").prenom("Carine").email("ws-inf@test.cm").motDePasse("x")
-                .role(Role.INFIRMIER).statutCompte(StatutCompte.APPROUVE).actif(true)
+                .role(Role.INFIRMIER).photoProfilChemin("photos-infirmiers/test.jpg").statutCompte(StatutCompte.APPROUVE).actif(true)
                 .latitude(3.8570).longitude(11.5021).datePosition(LocalDateTime.now()).build());
 
         StompSession sessionInf = connecter(infirmiere);
