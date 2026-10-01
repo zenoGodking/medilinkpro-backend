@@ -19,6 +19,7 @@ import java.util.Map;
  * Gestionnaire global des exceptions : transforme chaque erreur en reponse JSON
  * standardisee (ErrorResponse) plutot que de laisser fuiter une stacktrace.
  */
+@lombok.extern.slf4j.Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -78,6 +79,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("Erreur interne sur {} {}", request.getMethod(), request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Une erreur interne est survenue", request, null);
     }
 
